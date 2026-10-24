@@ -1,0 +1,17 @@
+{
+  "recommendations": [
+    "anthropic.claude-code",
+    "ms-python.python",
+    "charliermarsh.ruff",
+    "ms-toolsai.jupyter",
+    "usernamehw.errorlens",
+    "github.vscode-pull-request-github",
+    "mhutchie.git-graph",
+    "dbaeumer.vscode-eslint",
+    "shd101wyy.markdown-preview-enhanced"
+  ],
+  "unwantedRecommendations": [
+    "andrepimenta.claude-code-chat",
+    "codeflow-studio.claude-code-extension"
+  ]
+}

@@ -1,0 +1,47 @@
+# Secrets: never uploaded (env.example.txt IS uploaded)
+env.txt
+.env
+.env.*
+!env.example.txt
+*.key
+*.pem
+
+# Scratch and private data
+temp/
+input/private/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# Node
+node_modules/
+.next/
+.vite/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editors and OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# Claude Code local-only settings
+.claude/settings.local.json
+
+# Local SQLite files (owned by the database teammate)
+*.db
+*.sqlite3
