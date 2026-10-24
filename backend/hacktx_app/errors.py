@@ -48,6 +48,13 @@ def validation_details(exc: ValidationError) -> list[dict]:
     ]
 
 
+def request_validation(exc: ValidationError) -> AppError:
+    """The caller sent a bad request: 422 with field-level details (never the input values)."""
+    return AppError(
+        "VALIDATION_ERROR", "Request failed validation.", 422, details=validation_details(exc)
+    )
+
+
 def register_error_handlers(app: Flask) -> None:
     @app.errorhandler(AppError)
     def _app_error(exc: AppError):
@@ -55,12 +62,9 @@ def register_error_handlers(app: Flask) -> None:
             exc.code, exc.message, exc.status, retryable=exc.retryable, details=exc.details
         )
 
-    @app.errorhandler(ValidationError)
-    def _validation_error(exc: ValidationError):
-        return error_response(
-            "VALIDATION_ERROR", "Request failed validation.", 422, details=validation_details(exc)
-        )
-
+    # No ValidationError handler on purpose: routes turn bad *requests* into AppError 422 via
+    # request_validation(). A ValidationError that escapes to here came from our own code (for
+    # example a generated plan that breaks a model bound), which is a server bug, not a 422.
     @app.errorhandler(HTTPException)
     def _http_error(exc: HTTPException):
         code = (exc.name or "HTTP_ERROR").upper().replace(" ", "_")

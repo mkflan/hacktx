@@ -22,7 +22,11 @@ Owners: **App** = application/backend logic (branch `backend-w/o-database`),
 - [x] Resource grounding: model may only cite supplied resource IDs; research must be research
 - [x] Error envelope, 404/422/502/503, request size limit, CORS allow-list
 - [x] In-memory TTL cache keyed by content
-- [x] 87 tests passing, `ruff check` clean, local smoke test of the demo flow (fake + mock)
+- [x] 94 tests passing, `ruff check` clean, local smoke test of the demo flow (fake + mock)
+- [x] Pre-integration review (2026-10-24), bugs found and fixed with regression tests:
+      real-mode schema dropped the milestone `title` field (every live plan would have failed);
+      long ideas produced a bogus 422; server-side validation errors were reported as 422;
+      text could close its own prompt block; tiny weekly hours crashed the mock schedule
 - [x] README.md, INTEGRATION.md
 
 ## To do: integration
@@ -46,6 +50,9 @@ Owners: **App** = application/backend logic (branch `backend-w/o-database`),
 - [ ] **Front** Show `warnings`, `assumptions` and the mock label
 
 ## To do: real model and demo
+
+- [ ] **Team** First live Claude call has never happened. The request schema is checked against
+      the models offline, but Anthropic's own acceptance of it (size and feature limits) is unproven
 
 - [ ] **Team** Put `ANTHROPIC_API_KEY` in `env.txt`, set `LLM_MODE=anthropic`, try one live call
       (costs money; not done yet, all LLM tests so far use a fake client)

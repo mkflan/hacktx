@@ -43,7 +43,16 @@ def strict_json_schema(model: type[BaseModel]) -> dict:
 
     def clean(node: Any) -> Any:
         if isinstance(node, dict):
-            out = {k: clean(v) for k, v in node.items() if k not in _UNSUPPORTED_SCHEMA_KEYS}
+            out: dict = {}
+            for key, value in node.items():
+                if key in _UNSUPPORTED_SCHEMA_KEYS:
+                    continue
+                if key in ("properties", "$defs"):
+                    # Keys here are field and model names, not schema keywords: a field called
+                    # "title" must survive even though the "title" keyword is stripped.
+                    out[key] = {name: clean(sub) for name, sub in value.items()}
+                else:
+                    out[key] = clean(value)
             if out.get("type") == "object" and "properties" in out:
                 out["additionalProperties"] = False
                 out["required"] = list(out["properties"])

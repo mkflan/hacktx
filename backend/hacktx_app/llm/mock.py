@@ -21,6 +21,7 @@ from .validation import EXAMPLE_KINDS
 
 DEFAULT_HOURS = 12.0
 ASSUMED_HOURS_PER_WEEK = 6.0
+MAX_SCHEDULE_WEEKS = 52  # matches the suggested_schedule length bound
 MILESTONE_SHARES = (0.15, 0.25, 0.3, 0.2, 0.1)
 MILESTONE_TITLES = (
     "Set up and scope",
@@ -175,6 +176,13 @@ class MockLLMProvider:
         if not (time.unit == "hours_per_week" and time.amount):
             assumptions.append(f"Schedule assumes about {per_week:g} hours per week.")
         weeks = max(1, math.ceil(total / per_week))
+        constraint_warnings = []
+        if weeks > MAX_SCHEDULE_WEEKS:
+            constraint_warnings.append(
+                f"At {per_week:g} hours per week this takes about {weeks} weeks; the schedule "
+                f"lists the first {MAX_SCHEDULE_WEEKS}. Consider a smaller scope or more time."
+            )
+            weeks = MAX_SCHEDULE_WEEKS
         schedule, remaining = [], total
         for week in range(1, weeks + 1):
             week_hours = round(min(per_week, remaining), 1)
@@ -218,7 +226,7 @@ class MockLLMProvider:
             ],
             first_action="Spend 20 minutes writing the one-sentence goal and the demo to show.",
             scope_adjustments=scope_adjustments,
-            constraint_warnings=[],
+            constraint_warnings=constraint_warnings,
             assumptions=assumptions + ["Cost was not estimated in mock mode."],
             suggested_search_queries=[] if bank else default_search_queries(focus, interests),
             resource_ids=bank_ids[:5],

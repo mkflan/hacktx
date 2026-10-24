@@ -27,7 +27,10 @@ def prompt_version() -> str:
 
 
 def _block(tag: str, payload: object) -> str:
-    return f"<{tag}>\n{json.dumps(payload, ensure_ascii=False, indent=1)}\n</{tag}>"
+    # "<" is escaped so text from users or the database can never contain a closing tag that
+    # ends its own data block; the escaped form is still valid JSON the model reads normally.
+    text = json.dumps(payload, ensure_ascii=False, indent=1).replace("<", "\\u003c")
+    return f"<{tag}>\n{text}\n</{tag}>"
 
 
 def bank_payload(bank: list[Resource]) -> list[dict]:
@@ -59,7 +62,7 @@ def build_user_message(
     prefs = preferences.model_dump(mode="json") if preferences else {}
     parts.append(_block("preferences", prefs or "none given"))
     if idea is not None:
-        parts.append(f"<student_idea>\n{idea}\n</student_idea>")
+        parts.append(_block("student_idea", idea))
     if project is not None:
         catalog = project.model_dump(mode="json", exclude={"resources"})
         catalog["resource_ids"] = [r.id for r in project.resources]

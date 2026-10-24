@@ -1,10 +1,13 @@
 """HTTP routes. Thin: validate input, call a service, return JSON."""
 
+from collections.abc import Iterator
+from contextlib import contextmanager
+
 from flask import Blueprint, jsonify, request
-from pydantic import BaseModel, TypeAdapter
+from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from ..dependencies import get_context
-from ..errors import not_found
+from ..errors import not_found, request_validation
 from ..services import catalog, generation, ranking
 from .schemas import (
     PathId,
@@ -35,13 +38,24 @@ def _dump(value):
     return value
 
 
+@contextmanager
+def _bad_request() -> Iterator[None]:
+    """Only validation of what the caller sent becomes a 422; anything else is a server error."""
+    try:
+        yield
+    except ValidationError as exc:
+        raise request_validation(exc) from exc
+
+
 def _body[M: BaseModel](model: type[M]) -> M:
     raw = request.get_data(cache=False) or b"{}"
-    return model.model_validate_json(raw)
+    with _bad_request():
+        return model.model_validate_json(raw)
 
 
 def _id(value: str) -> str:
-    return _path_id.validate_python(value)
+    with _bad_request():
+        return _path_id.validate_python(value)
 
 
 @bp.get("/health")
@@ -84,7 +98,8 @@ def get_user(user_id: str):
 @bp.get("/api/projects")
 def list_projects():
     ctx = get_context()
-    query = ProjectsQuery.model_validate(request.args.to_dict())
+    with _bad_request():
+        query = ProjectsQuery.model_validate(request.args.to_dict())
     result = catalog.list_catalog(ctx.data.list_projects(), query)
     return _json({**result, "data_source": ctx.data_source})
 
@@ -128,7 +143,8 @@ def recommendations(user_id: str):
 @bp.post("/api/users/<user_id>/chat")
 def chat(user_id: str):
     ctx = get_context()
-    body = chat_request_adapter.validate_json(request.get_data(cache=False) or b"{}")
+    with _bad_request():
+        body = chat_request_adapter.validate_json(request.get_data(cache=False) or b"{}")
     if body.mode == "generate_ideas":
         return _json(generation.generate_ideas(ctx, _id(user_id), body))
     return _json(generation.elaborate_idea(ctx, _id(user_id), body))

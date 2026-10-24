@@ -61,7 +61,7 @@ def hydrate(ids: Iterable[str], bank: list[Resource]) -> list[Resource]:
 
 def default_search_queries(focus: str, interests: Iterable[str]) -> list[str]:
     """Search suggestions for when no supplied resource fits. Labeled as suggestions."""
-    focus = " ".join(focus.split()[:12])
+    focus = " ".join(focus.split()[:12])[:80].strip()
     queries = [f"{focus} beginner tutorial", f"{focus} research overview"]
     queries += [f"{focus} {interest} example project" for interest in list(interests)[:2]]
-    return queries
+    return [query[:200].strip() for query in queries]  # plan fields allow 200 characters

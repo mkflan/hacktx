@@ -7,6 +7,8 @@ addopts = "-q"
 line-length = 100
 target-version = "py314"
 src = ["backend"]
+# Teammate-owned files: never reformat or lint them from this repo config.
+extend-exclude = ["backend/app.py", "backend/db.py"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
