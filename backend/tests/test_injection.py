@@ -4,7 +4,7 @@ This is a stand-in for the database teammate's future implementation. It is deli
 different class with integer IDs and no shared code with the fake provider.
 """
 
-from hacktx_app.contracts import (
+from json_api.contracts import (
     NormalizedProject,
     NormalizedUser,
     ProjectDataProvider,

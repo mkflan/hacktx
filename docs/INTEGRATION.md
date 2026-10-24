@@ -1,5 +1,25 @@
 # Integration handoff: database and application
 
+## Folder map: what is what
+
+Two separate pieces live in `backend/`. They are connected in one place (`app.py`).
+
+| Path | What it is | Owner |
+|---|---|---|
+| `backend/app.py` | The Flask web app: page routes such as `/` and `/dashboard/<user_id>` that serve populated pages to the user | Database / Flask teammate |
+| `backend/db.py`, `backend/schema.sql` | SQLite connection and schema | Database / Flask teammate |
+| `backend/json_api/` | The JSON integration layer: `/api/...` endpoints, ranking, LLM generation and the `ProjectDataProvider` contract. It returns JSON only and never renders pages or opens SQLite | Application |
+| `backend/json_api/dev/` | Fake data for tests and local demos only | Application |
+| `backend/tests/` | Tests for `json_api` (fake data and fake LLM, no database, no network) | Application |
+| `docs/INTEGRATION.md` | This file | Both |
+| `docs/TODO.md` | Task status | Both |
+
+How they connect: `app.py` does `from json_api import init_app` and calls
+`init_app(app, data_provider=...)` to add the `/api/...` routes to the Flask app. For pages that
+arrive already populated, `app.py` can also call the functions in `json_api.services` directly
+inside a page route instead of going through HTTP. Until `app.py` is wired up, only its own routes
+exist; run the JSON API on its own with `python -m json_api` (from `backend/`).
+
 ## Who owns what
 
 | Area | Owner |
@@ -14,7 +34,7 @@ the four methods below.
 
 ## The contract: four read-only methods
 
-Defined in [backend/hacktx_app/contracts.py](../backend/hacktx_app/contracts.py):
+Defined in [backend/json_api/contracts.py](../backend/json_api/contracts.py):
 
 ```python
 class ProjectDataProvider(Protocol):
@@ -39,7 +59,7 @@ class ProjectDataProvider(Protocol):
 Your Flask app (`backend/app.py` on the `backend` branch) can mount everything with one call:
 
 ```python
-from hacktx_app import init_app
+from json_api import init_app
 from your_module import YourProjectDataProvider   # your code, your queries
 
 init_app(app, data_provider=YourProjectDataProvider())
@@ -138,7 +158,7 @@ When missing, generated plans state their assumptions and ranking does not use d
 
 ## Demo users to persist (your IDs, your schema)
 
-The fixtures in [backend/hacktx_app/dev/fixtures.py](../backend/hacktx_app/dev/fixtures.py) are
+The fixtures in [backend/json_api/dev/fixtures.py](../backend/json_api/dev/fixtures.py) are
 fictional. To get the same demo from SQLite, create equivalent records your own way:
 
 | username | major | interests | time commitment |

@@ -10,8 +10,8 @@ Owners: **App** = application/backend logic (branch `backend-w/o-database`),
 
 - [x] Repo setup: `.gitignore`, `requirements.txt` (pinned), `env.example.txt`, `pyproject.toml`
       (pytest + ruff), `.vscode/` settings, `.claude/settings.json`, project `CLAUDE.md`
-- [x] Data contract: DTOs + 4-method `ProjectDataProvider` ([contracts.py](../backend/hacktx_app/contracts.py))
-- [x] One injection seam: `create_app()` / `init_app()` ([main.py](../backend/hacktx_app/main.py))
+- [x] Data contract: DTOs + 4-method `ProjectDataProvider` ([contracts.py](../backend/json_api/contracts.py))
+- [x] One injection seam: `create_app()` / `init_app()` ([main.py](../backend/json_api/main.py))
 - [x] In-memory fixtures: Alex, Maya, 10 projects incl. weeks-only, unknown difficulty, no resources
 - [x] Explore: filters (AND, aliases, word matching), stable pagination, grouping, facets, details
 - [x] Recommendations: explainable score, time-fit rules, optional skill/goal preferences

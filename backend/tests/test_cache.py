@@ -2,8 +2,8 @@
 
 from conftest import SpyLLM
 
-from hacktx_app.dev.fixtures import ALEX
-from hacktx_app.services.cache import TTLCache
+from json_api.dev.fixtures import ALEX
+from json_api.services.cache import TTLCache
 
 IDEA = {"mode": "elaborate_idea", "idea": "plant watering robot"}
 
@@ -46,7 +46,7 @@ def test_mock_and_real_modes_never_share_entries(make_client, data):
     spy_mock, spy_real = SpyLLM(mode="mock"), SpyLLM(mode="anthropic", model_id="claude-opus-5-5")
     app_client = make_client(data_provider=data, llm_provider=spy_mock)
     post(app_client)
-    ctx = app_client.application.extensions["hacktx_app"]
+    ctx = app_client.application.extensions["json_api"]
     ctx.llm_provider = spy_real
     body = post(app_client)
     assert body["cache_hit"] is False and len(spy_real.calls) == 1
@@ -58,7 +58,7 @@ def test_invalid_output_is_not_cached(make_client, data):
     llm = InventingLLM()
     client = make_client(data_provider=data, llm_provider=llm)
     assert client.post("/api/users/fixture-ece/chat", json=IDEA).status_code == 502
-    assert len(client.application.extensions["hacktx_app"].cache) == 0
+    assert len(client.application.extensions["json_api"].cache) == 0
 
 
 def test_ttl_expiry_and_size_bound():

@@ -21,7 +21,7 @@ from .prompting import build_user_message, load_prompt
 from .schemas import IdeasDraft, ProjectPlanDraft
 from .validation import parse_draft, validate_ideas, validate_plan
 
-logger = logging.getLogger("hacktx_app")
+logger = logging.getLogger("json_api")
 
 FALLBACK_BETA = "server-side-fallback-2026-07-01"
 MIN_SECONDS_FOR_CORRECTION = 8.0

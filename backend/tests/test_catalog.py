@@ -2,8 +2,8 @@
 
 from conftest import ExplodingLLM
 
-from hacktx_app.contracts import NormalizedProject
-from hacktx_app.dev.fake_provider import InMemoryProjectDataProvider
+from json_api.contracts import NormalizedProject
+from json_api.dev.fake_provider import InMemoryProjectDataProvider
 
 
 def ids_in(body):

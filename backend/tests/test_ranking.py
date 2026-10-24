@@ -2,10 +2,10 @@
 
 from conftest import ExplodingLLM
 
-from hacktx_app.contracts import NormalizedProject, NormalizedUser, TimeValue
-from hacktx_app.dev.fake_provider import InMemoryProjectDataProvider
-from hacktx_app.dev.fixtures import ALEX, FIXTURE_PROJECTS
-from hacktx_app.services.timefit import evaluate_time_fit
+from json_api.contracts import NormalizedProject, NormalizedUser, TimeValue
+from json_api.dev.fake_provider import InMemoryProjectDataProvider
+from json_api.dev.fixtures import ALEX, FIXTURE_PROJECTS
+from json_api.services.timefit import evaluate_time_fit
 
 
 def recommend(client, user_id, body=None):

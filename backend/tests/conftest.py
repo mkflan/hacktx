@@ -2,10 +2,10 @@
 
 import pytest
 
-from hacktx_app import create_app
-from hacktx_app.config import Settings
-from hacktx_app.dev.fake_provider import InMemoryProjectDataProvider
-from hacktx_app.llm.mock import MockLLMProvider
+from json_api import create_app
+from json_api.config import Settings
+from json_api.dev.fake_provider import InMemoryProjectDataProvider
+from json_api.llm.mock import MockLLMProvider
 
 
 class SpyLLM:

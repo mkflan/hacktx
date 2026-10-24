@@ -6,7 +6,7 @@ from flask import Flask, jsonify
 from pydantic import ValidationError
 from werkzeug.exceptions import HTTPException
 
-logger = logging.getLogger("hacktx_app")
+logger = logging.getLogger("json_api")
 
 
 class AppError(Exception):

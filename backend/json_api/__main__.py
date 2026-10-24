@@ -1,4 +1,4 @@
-"""Local dev server: python -m hacktx_app (run from backend/)."""
+"""Local dev server: python -m json_api (run from backend/)."""
 
 import logging
 from pathlib import Path

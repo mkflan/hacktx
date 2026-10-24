@@ -22,7 +22,7 @@ tracked in [TODO.md](docs/TODO.md).
 ## Layout
 
 ```
-backend/hacktx_app/        application package (Flask + Pydantic v2)
+backend/json_api/        application package (Flask + Pydantic v2)
   main.py                  create_app() / init_app(): the one place providers are injected
   contracts.py             DTOs + ProjectDataProvider (4 read-only methods)
   dependencies.py          provider access, 503 wrapping for data failures
@@ -44,7 +44,7 @@ py -3.14 -m venv .venv
 
 ```powershell
 cd backend
-..\.venv\Scripts\python -m hacktx_app        # http://127.0.0.1:8000
+..\.venv\Scripts\python -m json_api        # http://127.0.0.1:8000
 ```
 
 Tests and lint, from the repo root:

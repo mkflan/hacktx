@@ -7,18 +7,18 @@ import anthropic
 import httpx2
 import pytest
 
-from hacktx_app.config import Settings
-from hacktx_app.dev.fake_provider import InMemoryProjectDataProvider
-from hacktx_app.dev.fixtures import ALEX, FIXTURE_PROJECTS
-from hacktx_app.errors import AppError
-from hacktx_app.llm.anthropic_provider import (
+from json_api.config import Settings
+from json_api.dev.fake_provider import InMemoryProjectDataProvider
+from json_api.dev.fixtures import ALEX, FIXTURE_PROJECTS
+from json_api.errors import AppError
+from json_api.llm.anthropic_provider import (
     AnthropicLLMProvider,
     LLMNotConfiguredError,
     strict_json_schema,
 )
-from hacktx_app.llm.mock import MockLLMProvider
-from hacktx_app.llm.schemas import ProjectPlanDraft
-from hacktx_app.services.resources import build_resource_bank
+from json_api.llm.mock import MockLLMProvider
+from json_api.llm.schemas import ProjectPlanDraft
+from json_api.services.resources import build_resource_bank
 
 SETTINGS = Settings(llm_mode="anthropic", anthropic_api_key="sk-test-not-real")
 BANK = build_resource_bank(FIXTURE_PROJECTS, ["soil sensor plants"])

@@ -12,8 +12,8 @@ from .errors import AppError
 from .llm.base import LLMProvider
 from .services.cache import TTLCache
 
-logger = logging.getLogger("hacktx_app")
-EXTENSION_KEY = "hacktx_app"
+logger = logging.getLogger("json_api")
+EXTENSION_KEY = "json_api"
 
 
 class SafeDataProvider:

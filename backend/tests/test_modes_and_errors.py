@@ -2,8 +2,8 @@
 
 import pytest
 
-from hacktx_app.config import Settings
-from hacktx_app.dev.fake_provider import InMemoryProjectDataProvider
+from json_api.config import Settings
+from json_api.dev.fake_provider import InMemoryProjectDataProvider
 
 
 def test_health_reports_modes_without_probing(client):

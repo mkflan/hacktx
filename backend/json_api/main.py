@@ -15,7 +15,7 @@ from .errors import register_error_handlers
 from .llm.base import LLMProvider
 from .services.cache import TTLCache
 
-logger = logging.getLogger("hacktx_app")
+logger = logging.getLogger("json_api")
 
 
 def _resolve_data(

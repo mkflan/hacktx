@@ -3,13 +3,13 @@
 from conftest import SpyLLM
 from pydantic import TypeAdapter
 
-from hacktx_app.contracts import NormalizedUser, Resource, TimeValue
-from hacktx_app.dev.fake_provider import InMemoryProjectDataProvider
-from hacktx_app.dev.fixtures import ALEX
-from hacktx_app.llm.anthropic_provider import strict_json_schema
-from hacktx_app.llm.prompting import build_user_message
-from hacktx_app.llm.schemas import IdeasDraft, ProjectPlanDraft
-from hacktx_app.services.resources import default_search_queries
+from json_api.contracts import NormalizedUser, Resource, TimeValue
+from json_api.dev.fake_provider import InMemoryProjectDataProvider
+from json_api.dev.fixtures import ALEX
+from json_api.llm.anthropic_provider import strict_json_schema
+from json_api.llm.prompting import build_user_message
+from json_api.llm.schemas import IdeasDraft, ProjectPlanDraft
+from json_api.services.resources import default_search_queries
 
 
 def _property_names(schema: dict) -> dict[str, set[str]]:

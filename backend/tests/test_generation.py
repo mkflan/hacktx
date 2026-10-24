@@ -2,10 +2,10 @@
 
 from conftest import SpyLLM
 
-from hacktx_app.contracts import NormalizedProject, Resource
-from hacktx_app.dev.fake_provider import InMemoryProjectDataProvider
-from hacktx_app.dev.fixtures import FIXTURE_PROJECTS
-from hacktx_app.llm.mock import MockLLMProvider
+from json_api.contracts import NormalizedProject, Resource
+from json_api.dev.fake_provider import InMemoryProjectDataProvider
+from json_api.dev.fixtures import FIXTURE_PROJECTS
+from json_api.llm.mock import MockLLMProvider
 
 
 def chat(client, user_id, body):
