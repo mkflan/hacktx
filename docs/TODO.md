@@ -24,12 +24,20 @@ Owners: **Back** = backend (Rashmi and Viraj), **Front** = pages and templates, 
       lighter brown backdrop, green accents, matte (no shadows or blur), white clouds,
       larger text, A / A+ / A++ text size switch, shelf scrollbar and mouse-wheel scrolling
 
+- [x] Demo polish 2026-10-25: app renamed RabbitHole, tabs spelled out (Rabbit Hole Projects,
+      Caterpillar Mentor, Wonderland Forum), project-finding landing copy, footer credit;
+      text size slider and test-user switcher behind an Accessibility button; the switcher
+      lists every profile including ones made on the landing page; forum posts and comments
+      are made only as the signed-in student; "Dig deeper" sits under the materials;
+      Gemini 3.5 Flash-Lite first with 3.6 Flash as fallback (2.5 Flash is gone);
+      enrichment script budget 20 by default and shows the SerpApi balance first
+
 ## Before judging
 
 - [ ] **Team** Rehearse docs/DEMO.md twice end to end on the demo laptop; time it
 - [ ] **Team** Record a backup video of the journey (in case Wi-Fi or quotas fail)
-- [ ] **Team** Check SerpApi searches left at https://serpapi.com/dashboard (budget ~80 for
-      rehearsal and the demo; each dig or starter costs 2)
+- [ ] **Team** Check SerpApi searches left at https://serpapi.com/dashboard (89 plan searches
+      plus 1000 extra credits on 2026-10-25; each dig, starter or dug-up mentor turn costs 2)
 - [ ] **Team** Devpost write-up and the 2-3 minute video script (see hackathon playbook)
 
 ## Later (see BACKLOG.md)

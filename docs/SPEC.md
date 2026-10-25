@@ -1,4 +1,4 @@
-# Research Rabbit: demo spec (HackTX 26)
+# RabbitHole: demo spec (HackTX 26)
 
 Written 2026-10-24 late evening. The plan for the judged demo. Status lives in TODO.md; things
 cut from the demo live in BACKLOG.md.
@@ -7,7 +7,7 @@ cut from the demo live in BACKLOG.md.
 
 Undergraduates want a project that fits their major, interests, time and skill, and that they
 can put on a resume. Finding one, then finding trustworthy materials, docs, tutorials and papers
-for it, is the slow part. Research Rabbit recommends projects, hands over real resources, and
+for it, is the slow part. RabbitHole recommends projects, hands over real resources, and
 gives a mentor chatbot that knows the project.
 
 ## The 60-second journey (what the video and the live demo show)
@@ -55,8 +55,9 @@ The landing pop-up creates a third, live, during the demo.
 | `GET /forum`, `POST /forum/posts`, `POST /forum/posts/<id>/comments` | Wonderland (exists; gains search, sort and starters). |
 | `GET /forum/posts/<id>` | One starter rendered in full. |
 
-Nav tabs (keeping the Wonderland language): Home, The Rabbit Hole (dashboard), Ask the
-Caterpillar (chatbot), Wonderland (forum). Dark panel style, gold `#d4af37` accents, Cinzel and
+Nav tabs (keeping the Wonderland language, with the function spelled out): Home, Rabbit Hole
+Projects (dashboard), Caterpillar Mentor (chatbot), Wonderland Forum (forum). Text size and the
+test-user switcher live behind the Accessibility button at the right of the nav. Dark panel style, gold `#d4af37` accents, Cinzel and
 Space Grotesk fonts, sky/grass/dirt sections stay as they are.
 
 ## JSON API additions (`backend/json_api`)
@@ -71,7 +72,8 @@ Space Grotesk fonts, sky/grass/dirt sections stay as they are.
 
 ## LLM (Gemini)
 
-- Default model `gemini-3.6-flash` (3.8 timed out or returned 503 on every live call today).
+- Default model `gemini-3.5-flash-lite` (2026-10-25: chat 4 s, starter 9 s; 3.6 and 3.8 Flash
+  returned 503 on and off, 2.5 Flash is gone). Fallback `gemini-3.6-flash`.
 - New provider method `chat(system, turns) -> str` (plain text, no schema), plus the mock.
 - New prompts: `assistant_project.md` (mentor for one catalog project: only cite supplied
   resources, give next steps, debug with the student) and `assistant_general.md` (develop a
@@ -80,7 +82,7 @@ Space Grotesk fonts, sky/grass/dirt sections stay as they are.
 
 ## SerpApi (the sponsor track)
 
-Role: Research Rabbit does not make up sources; it digs them up. `backend/serp.py` wraps
+Role: RabbitHole does not make up sources; it digs them up. `backend/serp.py` wraps
 `https://serpapi.com/search.json` with httpx, with a `serp_cache` table keyed by engine+query so
 nothing is searched twice and the demo works offline once warmed.
 

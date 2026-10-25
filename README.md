@@ -1,4 +1,4 @@
-# Research Rabbit
+# RabbitHole
 
 **Find a project that fits your major, your interests, your time and your level, then get
 everything you need to start it: a plan, a shopping list with where to buy, documentation,
@@ -16,18 +16,18 @@ Built at HackTX 26 for the SerpApi track. Flask + SQLite + Gemini + SerpApi.
 3. **Project pages.** Getting-started outline, materials with store links and prices, and
    grouped sources: documentation, YouTube tutorials, papers. Every link is either written by
    the team or returned by a SerpApi search, and each one says which.
-4. **Ask the Caterpillar.** A Gemini mentor in two modes: about one catalog project (it knows the
+4. **Caterpillar Mentor.** A Gemini mentor in two modes: about one catalog project (it knows the
    outline, materials and sources) or developing the student's own pitch. It may link only to
    sources it was given; anything else is removed before the student sees it. "Dig deeper" runs
    a live SerpApi search mid-conversation.
 5. **Project starters.** "Turn into a project starter": SerpApi finds tutorials and papers for
    the idea, Gemini writes the full plan (milestones, materials, schedule, sources), and one
-   click posts it to Wonderland.
-6. **Wonderland.** The community forum: starters and discussions, searchable and sortable.
+   click posts it to the Wonderland Forum.
+6. **Wonderland Forum.** The community forum: starters and discussions, searchable and sortable.
 
 ## Where SerpApi does the work
 
-Research Rabbit does not make sources up; it digs them up. `backend/serp.py` wraps four SerpApi
+RabbitHole does not make sources up; it digs them up. `backend/serp.py` wraps four SerpApi
 engines behind one cached client (the `serp_cache` table, so a query is never paid for twice):
 
 | Engine | Used for |
@@ -52,7 +52,8 @@ cd backend
 
 The first start creates `backend/app.db`, seeds the catalog, the demo students and the forum,
 and replays `serp_cache.json`. Demo students: `alex_demo` (ECE, beginner, 12 h) and `maya_demo`
-(CS, intermediate, 40 h); the nav switcher jumps between them. `docs/DEMO.md` is the run sheet.
+(CS, intermediate, 40 h); the Accessibility menu in the nav (text size and test user)
+jumps between them. `docs/DEMO.md` is the run sheet.
 
 Tests and lint, from the repo root:
 
@@ -69,8 +70,8 @@ Tests and lint, from the repo root:
 |---|---|---|---|
 | `LLM_MODE` | `mock`, `gemini` | `mock` | `mock` is a deterministic offline mentor labeled `generation_mode: "mock"`. |
 | `GEMINI_API_KEY` | key | none | Required for `LLM_MODE=gemini`. Server-side only. |
-| `GEMINI_MODEL` | model ID | `gemini-3.6-flash` | 3.8 Flash was overloaded on every live call during the hackathon. |
-| `GEMINI_FALLBACK_MODEL` | model ID or empty | `gemini-2.5-flash` | Tried once when the main model is unavailable, rate limited or times out. Responses report which model answered. |
+| `GEMINI_MODEL` | model ID | `gemini-3.5-flash-lite` | Fast and not overloaded on 2026-10-25 (chat 4 s, starter 9 s). 3.6 and 3.8 Flash returned 503 on and off; 2.5 Flash is no longer served. |
+| `GEMINI_FALLBACK_MODEL` | model ID or empty | `gemini-3.6-flash` | Tried once when the main model is unavailable, rate limited or times out. Responses report which model answered. |
 | `GEMINI_THINKING` | `minimal`..`high` | `medium` | Lower is faster. |
 | `SERPAPI_API_KEY` | key | none | Enables "Dig deeper", starter sources and the enrichment script. Without it the catalog still works from the authored seed and the cache snapshot. |
 | `LLM_DEADLINE_SECONDS` | 5-300 | `45` | Total budget per generation, including the one correction retry. |
