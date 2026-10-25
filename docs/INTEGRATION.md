@@ -1,42 +1,49 @@
-# Integration handoff: database and application
+# Integration: pages, database and JSON API
+
+One Flask app (`backend/app.py`) serves the pages, owns the SQLite database and mounts the JSON
+API. Rashmi and Viraj own all of it; Kai handed over the schema, seed and provider on
+2026-10-24.
 
 ## Folder map: what is what
 
-Two separate pieces live in `backend/`. They are connected in one place (`app.py`).
-
-| Path | What it is | Owner |
-|---|---|---|
-| `backend/app.py` | The Flask web app: page routes such as `/` and `/dashboard/<user_id>` that serve populated pages to the user | Database / Flask teammate |
-| `backend/db.py`, `backend/schema.sql`, `backend/seed.sql` | SQLite connection, schema (version 2) and demo rows | Database / Flask teammate |
-| `backend/sqlite_provider.py` | The SQLite `ProjectDataProvider`: read-only queries and the row-to-DTO mapping | Database / Flask teammate |
-| `backend/json_api/` | The JSON integration layer: `/api/...` endpoints, ranking, LLM generation and the `ProjectDataProvider` contract. It returns JSON only and never renders pages or opens SQLite | Application |
-| `backend/json_api/dev/` | Fake data for tests and local demos only | Application |
-| `backend/tests/` | Tests for `json_api` (fake data and fake LLM, no database, no network) | Application |
-| `docs/INTEGRATION.md` | This file | Both |
-| `docs/TODO.md` | Task status | Both |
-
-How they connect: `app.py` calls
-`init_json_api(app, data_provider=SQLiteProjectDataProvider(db.get_db))`, which adds the
-`/api/...` routes to the Flask app, reading SQLite through one connection per request. Page
-routes such as `/dashboard/<user_id>` call `json_api.services` directly instead of going through
-HTTP. `DATA_MODE=fake` swaps in the in-memory fixtures. `python -m json_api` (from `backend/`)
-still runs the JSON API alone on fixtures.
-
-Note: the schema, seed and provider were written on the application side (Rashmi and Viraj's
-decision) to unblock the demo. Kai: please review them and change anything; the tests in
-`backend/tests/test_sqlite_provider.py` will tell you if the mapping still fits the contract.
-
-## Who owns what
-
-| Area | Owner |
+| Path | What it is |
 |---|---|
-| SQLite schema, tables, connections, queries, migrations, seeds, database files | Database teammate |
-| User/project read functions and their mapping into the DTOs below | Database teammate |
-| Saving generated plans or history (future) | Database teammate |
-| The `ProjectDataProvider` contract, DTOs, services, routes, ranking, LLM calls | Application (this branch) |
+| `backend/app.py` | `create_app()`: page routes `/`, `/forum`, `/dashboard/<user_id>`, plus `init_json_api()` |
+| `frontend/templates/`, `frontend/static/` | Jinja pages (`base.html`, `index.html`, `forum.html`, `dashboard.html`) and static files |
+| `backend/db.py` | SQLite connection per request, schema version check, demo seeding, `connect_memory()` for tests |
+| `backend/schema.sql`, `backend/seed.sql` | Tables (schema version 2) and the demo rows |
+| `backend/sqlite_provider.py` | `SQLiteProjectDataProvider`: read-only queries and the row-to-DTO mapping |
+| `backend/json_api/` | `/api/...` endpoints, ranking, Gemini generation and the `ProjectDataProvider` contract. JSON only; it never renders pages or imports `sqlite3` |
+| `backend/json_api/dev/` | Fake data for tests and offline demos only |
+| `backend/tests/` | pytest: json_api, the SQLite provider and the pages. SQLite only in memory, fake LLM, no network |
 
-The application never opens SQLite, imports `sqlite3`, or assumes a table layout. It only calls
-the four methods below.
+## How the pieces connect
+
+```
+browser ──> app.py pages ──> json_api.services (ranking) ──┐
+       └──> /api/... (json_api routes) ────────────────────┼──> ProjectDataProvider
+                                                           │      = SQLiteProjectDataProvider(db.get_db)
+                                                           └──> LLMProvider = Gemini (or mock)
+```
+
+`create_app()` loads `env.txt`, builds `SQLiteProjectDataProvider(db.get_db)` and calls
+`init_json_api(app, data_provider=...)`. Every request gets its own SQLite connection, closed on
+teardown. Page routes call `json_api.services` directly instead of going through HTTP.
+`DATA_MODE=fake` swaps SQLite for the in-memory fixtures (pages then show a "demo data" banner).
+`python -m json_api` still runs the JSON API alone on fixtures.
+
+Tests call `create_app(settings=..., config={"DATABASE": ":memory:"}, data_provider=...,
+llm_provider=...)`, so they never read `env.txt`, open `app.db` or call Gemini.
+
+## Rules that keep the layers apart
+
+- `json_api/` never opens SQLite, imports `sqlite3` or assumes a table layout. It only calls
+  the four methods below. All SQL lives in `db.py`, `schema.sql`, `seed.sql` and
+  `sqlite_provider.py`.
+- Changing a table means changing `sqlite_provider.py` in the same commit;
+  `test_sqlite_provider.py` checks that the seed still matches the fixtures and the contract.
+- Bump `PRAGMA user_version` in `schema.sql` and `SCHEMA_VERSION` in `db.py` together when a
+  column changes, so an old `app.db` is refused instead of misread.
 
 ## The contract: four read-only methods
 
@@ -57,29 +64,10 @@ class ProjectDataProvider(Protocol):
   not fit returns `503 DATA_CONTRACT_ERROR`.
 - `list_projects()` returning the whole catalog is fine at hackathon size; the app filters
   and paginates.
-- Optionally set `data_source = "sqlite"` (or similar) on your class; it is echoed in
-  responses. Without it, responses say `"injected"`.
+- `data_source` on the provider class (`"sqlite"`) is echoed in every response.
 
-## Plugging it in (one place)
-
-Your Flask app (`backend/app.py` on the `backend` branch) can mount everything with one call:
-
-```python
-from json_api import init_json_api
-from your_module import YourProjectDataProvider   # your code, your queries
-
-init_json_api(app, data_provider=YourProjectDataProvider())
-```
-
-`init_json_api` registers the routes, error handlers and CORS on your existing app. Because routes
-run inside a Flask request, your `db.get_db()` (which uses `g` and `current_app`) works inside
-the provider methods. Standalone, `create_app(data_provider=..., llm_provider=...)` does the
-same with a new Flask app. With `DATA_MODE=injected` and no provider passed, the data routes
-return `503 DATA_PROVIDER_NOT_CONFIGURED`.
-
-Note: the skeleton's `/dashboard/<user_id>` route and these `/api/...` routes don't collide.
-The skeleton imports `db` as a top-level module, so run it from `backend/`; this package is
-importable from there too.
+Write paths (create a user, add a project, save a plan) are not part of this contract yet; see
+[Saving generated plans](#saving-generated-plans).
 
 ## Normalized shapes, with examples
 
@@ -180,5 +168,6 @@ always take IDs from `GET /api/users`.
 ## Saving generated plans
 
 Every generated response returns `persisted: false`. Nothing is saved, and no save method is
-called. Saving or history would be a later, separate integration (for example a
-`save_plan(user_id, plan)` method you own). The current endpoints do not depend on it.
+called. Saving and history are the next backend task: write methods in `sqlite_provider.py`
+(for example `create_user(...)` and `save_plan(user_id, plan)`) plus `POST` routes. The current
+endpoints do not depend on them.

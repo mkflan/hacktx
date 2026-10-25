@@ -5,21 +5,27 @@ This repo is the hackathon project. The parent `Documents\GitHub\CLAUDE.md` and
 folder layout, small commits, secrets in `env.txt`, and handoffs.
 
 ## Layout
-- `backend/json_api/`: application logic (Flask + Pydantic v2). `backend/tests/`: pytest.
-- `docs/`: INTEGRATION.md (database handoff) and TODO.md (task status). Nothing else loose in the root.
+- `backend/app.py`: the Flask app (`create_app()`, page routes). `frontend/templates/`,
+  `frontend/static/`: Jinja pages and static files.
+- `backend/db.py`, `schema.sql`, `seed.sql`, `sqlite_provider.py`: SQLite.
+- `backend/json_api/`: JSON API, ranking and Gemini (Flask + Pydantic v2). `backend/tests/`: pytest.
+- `docs/`: INTEGRATION.md (how the pieces connect) and TODO.md (task status). Nothing else
+  loose in the root.
 - `temp/`: scratch files and scratchpad (gitignored).
 
 ## Branches
-- `backend-w/o-database`: application logic (this work). `backend`: teammate's Flask + SQLite
-  skeleton. `front`: frontend. Do not switch branches over someone's uncommitted changes.
+- `master` is the main line. Do feature work on a branch and merge it into `master` when tests
+  pass. Do not switch branches over someone's uncommitted changes.
 - Never push or deploy unless asked.
 
-## Ownership boundary
-- SQLite lives in `backend/db.py`, `schema.sql`, `seed.sql` and `sqlite_provider.py` (Kai's
-  area; the app side wrote v2 to unblock the demo, ask before redesigning it). Never import
+## Layer rules
+- Rashmi and Viraj own the whole backend, including the schema, seed and provider (Kai handed
+  them over on 2026-10-24).
+- All SQL stays in `db.py`, `schema.sql`, `seed.sql` and `sqlite_provider.py`. Never import
   `sqlite3`/ORMs in `backend/json_api/`, and never commit `app.db`.
-- Data reaches the app only through `ProjectDataProvider` (4 read methods) injected via
-  `init_json_api()` / `create_app()`. See docs/INTEGRATION.md.
+- Data reaches json_api only through `ProjectDataProvider` (4 read methods) injected via
+  `init_json_api()` / `create_app()`. A table change updates `sqlite_provider.py` and the
+  schema version in the same commit. See docs/INTEGRATION.md.
 
 ## Commands
 - Tests: `.venv\Scripts\python -m pytest` (repo root). Lint: `.venv\Scripts\ruff check backend`.
