@@ -46,3 +46,6 @@ Thumbs.db
 # Local SQLite files (backend/app.db is rebuilt from schema.sql + seed.sql)
 *.db
 *.sqlite3
+
+# Playwright MCP browser logs
+.playwright-mcp/
