@@ -2,11 +2,11 @@
 
 {% macro sky(title, subtitle, min_h="min-h-[360px]", fancy=False) -%}
         <header class="relative w-full {{ min_h }} bg-blue px-6 pt-16 pb-28 flex flex-col justify-center items-center text-center overflow-hidden">
-            <div class="absolute top-8 left-12 w-52 h-20 bg-white rounded-full pointer-events-none">
+            <div class="hidden md:block absolute top-8 left-12 w-52 h-20 bg-white rounded-full pointer-events-none">
                 <div class="absolute -top-4 left-6 w-24 h-20 bg-white rounded-full"></div>
                 <div class="absolute -top-6 right-8 w-28 h-24 bg-white rounded-full"></div>
             </div>
-            <div class="absolute top-16 right-16 w-64 h-24 bg-white rounded-full pointer-events-none">
+            <div class="hidden md:block absolute top-16 right-16 w-64 h-24 bg-white rounded-full pointer-events-none">
                 <div class="absolute -top-6 left-8 w-28 h-24 bg-white rounded-full"></div>
                 <div class="absolute -top-4 right-6 w-24 h-20 bg-white rounded-full"></div>
             </div>
@@ -23,7 +23,7 @@
 {%- endmacro %}
 
 {% macro difficulty_badge(level) -%}
-    {%- set colors = {"beginner": "bg-[#1f3a2a] text-[#8fd19e]", "intermediate": "bg-[#1a2f3a] text-[#9fd3f0]", "advanced": "bg-[#3a1f2a] text-pink"} -%}
+    {%- set colors = {"beginner": "bg-[#3d5a44] text-[#dcefd2]", "intermediate": "bg-[#2a4650] text-[#c9eef7]", "advanced": "bg-[#5a2e28] text-[#f5c8bf]"} -%}
     <span class="font-magical text-xs tracking-wide rounded px-2 py-0.5 {{ colors.get(level, 'bg-moss text-gray-300') }}">{{ level or "difficulty unknown" }}</span>
 {%- endmacro %}
 

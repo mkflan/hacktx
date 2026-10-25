@@ -13,11 +13,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Space+Grotesk:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 
     <script>
-        /* Text size switch: scales the root font size, so everything (rem based) grows together. */
-        const TEXT_SIZES = { normal: "100%", large: "115%", xlarge: "130%" };
+        /* Text size switch: multiplies the fluid root font size (see html below), so everything
+           (rem based) grows together and still follows the window width. */
+        const TEXT_SIZES = { normal: "1", large: "1.15", xlarge: "1.3" };
         function applyTextSize(size) {
             if (!TEXT_SIZES[size]) size = "normal";
-            document.documentElement.style.fontSize = TEXT_SIZES[size];
+            document.documentElement.style.setProperty("--text-scale", TEXT_SIZES[size]);
             document.querySelectorAll("[data-text-size]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.textSize === size)));
             try { localStorage.setItem("rabbit-text-size", size); } catch (e) {}
         }
@@ -32,14 +33,20 @@
             --color-fuschia: #e1b6f2;
             --color-purple: #adb8d6;
             --color-blue: #b1e6f3;
-            --color-dirt: #b8956f;
-            --color-grass: #5c7c65;
-            --color-leaf: #74d68a;
-            --color-forest: #0f2e1b;
-            --color-ink: #2b1a10;
-            --color-panel: #0d1412;
-            --color-panel-2: #1a2923;
-            --color-moss: #2c4238;
+            --color-dirt: #b8956f;      /* topsoil: the backdrop */
+            --color-grass: #5c7c65;     /* the grass line and grass buttons */
+            --color-leaf: #a9c99a;      /* sage: accents on bark */
+            --color-forest: #1c3022;    /* deep pine: headings on the soil */
+            --color-ink: #2b1a10;       /* dark loam: small text on the soil */
+            --color-panel: #2e2016;     /* bark: cards and panels */
+            --color-panel-2: #3e2c1f;   /* lighter bark: inputs and raised parts */
+            --color-moss: #5b4431;      /* bark edge: borders */
+            /* Warm the grays used for text on bark (Tailwind's default grays are cool blue). */
+            --color-gray-200: #ede4d8;
+            --color-gray-300: #dccfbf;
+            --color-gray-400: #c2b29f;
+            --color-gray-500: #a8977f;
+            --color-gray-600: #8c7a64;
 
             --font-cursive: 'Great Vibes', cursive;
             --font-handwriting: 'Satisfy', cursive;
@@ -48,13 +55,15 @@
             --font-magical: 'Space Grotesk', sans-serif;
         }
 
+        /* Fluid size: the page grows and shrinks with the window width, times the text size switch. */
+        html { font-size: calc(var(--text-scale, 1) * clamp(13px, 0.35vw + 11px, 20px)); }
         body { background-color: #fffbf2; }
 
         /* Netflix-style rows: a visible scrollbar underneath, plus the mouse wheel (see below) */
-        .shelf { scrollbar-width: thin; scrollbar-color: #74d68a #2c4238; }
+        .shelf { scrollbar-width: thin; scrollbar-color: #7fa07f #3e2c1f; }
         .shelf::-webkit-scrollbar { height: 12px; }
-        .shelf::-webkit-scrollbar-track { background: #2c4238; border-radius: 6px; }
-        .shelf::-webkit-scrollbar-thumb { background: #74d68a; border-radius: 6px; }
+        .shelf::-webkit-scrollbar-track { background: #3e2c1f; border-radius: 6px; }
+        .shelf::-webkit-scrollbar-thumb { background: #7fa07f; border-radius: 6px; }
 
         .text-size-btn { @apply font-magical font-semibold text-slate-800 bg-cream border border-purple-300/60 rounded px-2 py-0.5 cursor-pointer hover:bg-white; }
         .text-size-btn[aria-pressed="true"] { @apply bg-forest text-cream border-forest; }
@@ -62,8 +71,8 @@
         .tag { @apply font-magical text-xs tracking-wide rounded-full px-2 py-0.5 border border-moss text-gray-400; }
         .tag-leaf { @apply border-leaf text-leaf; }
         .btn-leaf { @apply font-heading text-sm tracking-wide font-bold bg-panel-2 border-2 border-leaf text-leaf rounded px-5 py-3 hover:bg-leaf hover:text-panel transition-all cursor-pointer; }
-        .btn-moss { @apply font-magical text-sm font-semibold tracking-wide bg-moss text-cream rounded px-4 py-2 hover:bg-leaf hover:text-panel transition-colors cursor-pointer; }
-        .field { @apply w-full bg-[#131f1b] border border-moss text-cream font-magical text-base px-4 py-3 rounded focus:outline-none focus:border-leaf; }
+        .btn-moss { @apply font-magical text-sm font-semibold tracking-wide bg-grass text-cream rounded px-4 py-2 hover:bg-leaf hover:text-panel transition-colors cursor-pointer; }
+        .field { @apply w-full bg-[#261a11] border border-moss text-cream font-magical text-base px-4 py-3 rounded focus:outline-none focus:border-leaf; }
     </style>
 
     {% block head %}{% endblock %}
@@ -77,13 +86,13 @@
                 <span>🐇</span>
                 <span class="font-heading font-bold text-xl md:text-2xl text-slate-900">Research Rabbit</span>
             </a>
-            <div class="flex items-center gap-4 md:gap-6 text-sm md:text-base font-semibold tracking-wide">
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-1 md:gap-x-6 text-sm md:text-base font-semibold tracking-wide">
                 <a href="/" class="hover:text-forest hover:underline underline-offset-4 decoration-2 transition-colors {{ 'text-forest underline' if request.path == '/' }}">Home</a>
                 <a href="/dashboard" class="hover:text-forest hover:underline underline-offset-4 decoration-2 transition-colors {{ 'text-forest underline' if request.path.startswith('/dashboard') or request.path.startswith('/projects') }}">The Rabbit Hole</a>
                 <a href="/chat" class="hover:text-forest hover:underline underline-offset-4 decoration-2 transition-colors {{ 'text-forest underline' if request.path.startswith('/chat') }}">Ask the Caterpillar</a>
                 <a href="/forum" class="hover:text-forest hover:underline underline-offset-4 decoration-2 transition-colors {{ 'text-forest underline' if request.path.startswith('/forum') }}">Wonderland</a>
             </div>
-            <div class="flex items-center gap-2 font-magical text-sm">
+            <div class="flex flex-wrap items-center gap-2 font-magical text-sm">
                 {% if current_user %}
                 <form method="post" action="/session/{{ current_user.id }}" id="switchUserForm" class="flex items-center gap-2">
                     <input type="hidden" name="next" value="{{ request.path }}">

@@ -59,6 +59,7 @@
                             <h2 class="font-heading text-base md:text-lg text-leaf tracking-wide font-bold mb-1">Materials and where to get them</h2>
                             <p class="font-magical text-xs text-gray-400 mb-4">Estimated costs are the team's; store links and prices are live search results (SerpApi Google Shopping), never guessed.</p>
                             {% if materials %}
+                            <div class="overflow-x-auto">
                             <table class="w-full font-magical text-sm text-gray-200">
                                 <thead class="text-leaf text-left">
                                     <tr><th class="py-1 pr-2">Item</th><th class="py-1 pr-2">Qty</th><th class="py-1 pr-2">Why</th><th class="py-1 pr-2 text-right">Est.</th><th class="py-1 text-right">Buy</th></tr>
@@ -79,6 +80,7 @@
                                 {% endfor %}
                                 </tbody>
                             </table>
+                            </div>
                             {% else %}
                             <p class="font-magical text-base text-gray-400">Nothing to buy: a laptop is enough.</p>
                             {% endif %}

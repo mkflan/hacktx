@@ -25,7 +25,7 @@
             </svg>
 
             <div class="relative max-w-3xl mx-auto flex justify-center pt-6 pb-12 z-20">
-                <button onclick="openInterestModal()" class="group relative bg-panel-2 border-2 border-leaf px-8 py-3.5 rounded-full hover:bg-[#253830] transition-all transform hover:scale-105 cursor-pointer flex items-center space-x-3">
+                <button onclick="openInterestModal()" class="group relative bg-panel-2 border-2 border-leaf px-8 py-3.5 rounded-full hover:bg-[#4a3424] transition-all transform hover:scale-105 cursor-pointer flex items-center space-x-3">
                     <span class="text-leaf text-base">🌱</span>
                     <span class="font-heading text-sm tracking-wide text-leaf font-bold">dig deep?</span>
                 </button>
@@ -93,8 +93,8 @@
                 {% set picked = form.getlist('interests') if form.getlist is defined else [] %}
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-56 overflow-y-auto pr-1">
                     {% for tag in featured_interests %}
-                    <label class="flex items-center space-x-2 bg-[#131f1b] border border-moss p-2 rounded cursor-pointer hover:border-leaf transition-colors">
-                        <input type="checkbox" name="interests" value="{{ tag }}" class="accent-[#74d68a]" {{ 'checked' if tag in picked }}>
+                    <label class="flex items-center space-x-2 bg-[#261a11] border border-moss p-2 rounded cursor-pointer hover:border-leaf transition-colors">
+                        <input type="checkbox" name="interests" value="{{ tag }}" class="accent-[#7fa07f]" {{ 'checked' if tag in picked }}>
                         <span class="font-magical text-sm tracking-wide text-cream">{{ tag }}</span>
                     </label>
                     {% endfor %}
@@ -120,7 +120,7 @@
                     <label class="block font-heading text-sm tracking-wide text-leaf mb-2">Difficulty</label>
                     <div class="flex flex-wrap gap-2">
                         {% for level in difficulties %}
-                        <label class="flex-1 text-center bg-[#131f1b] border border-moss rounded p-2 cursor-pointer hover:border-leaf has-[:checked]:border-leaf has-[:checked]:text-leaf font-magical text-sm">
+                        <label class="flex-1 text-center bg-[#261a11] border border-moss rounded p-2 cursor-pointer hover:border-leaf has-[:checked]:border-leaf has-[:checked]:text-leaf font-magical text-sm">
                             <input type="radio" name="difficulty" value="{{ level }}" class="sr-only" {{ 'checked' if form.get('difficulty', 'beginner') == level }}>
                             {{ level }}
                         </label>

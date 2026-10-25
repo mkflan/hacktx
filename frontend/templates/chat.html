@@ -33,7 +33,7 @@
                         <div class="flex flex-wrap items-center gap-3">
                             <button type="submit" id="sendBtn" class="btn-leaf">Ask</button>
                             <label class="flex items-center gap-2 font-magical text-sm text-gray-300 {{ '' if serpapi_enabled else 'opacity-60' }}" title="{{ 'Runs a live SerpApi search (YouTube + web) and lets the Caterpillar cite the results' if serpapi_enabled else 'SERPAPI_API_KEY is not set on the server' }}">
-                                <input type="checkbox" id="digToggle" class="accent-[#74d68a]" {{ '' if serpapi_enabled else 'disabled' }}>
+                                <input type="checkbox" id="digToggle" class="accent-[#7fa07f]" {{ '' if serpapi_enabled else 'disabled' }}>
                                 🔎 Dig deeper on the web{{ '' if serpapi_enabled else ' (unavailable)' }}
                             </label>
                             {% if not project %}
@@ -97,7 +97,7 @@ function bubble(role, html, extra = "") {
     const mine = role === "user";
     const el = document.createElement("div");
     el.className = mine ? "flex justify-end" : "flex justify-start";
-    el.innerHTML = `<div class="max-w-[85%] rounded-md px-4 py-3 ${mine ? "bg-panel-2 border border-leaf/60 text-cream" : "bg-[#131f1b] border border-moss text-gray-200"} space-y-2">
+    el.innerHTML = `<div class="max-w-[85%] rounded-md px-4 py-3 ${mine ? "bg-panel-2 border border-leaf/60 text-cream" : "bg-[#261a11] border border-moss text-gray-200"} space-y-2">
         <p class="text-xs tracking-wide ${mine ? "text-leaf" : "text-gray-400"}">${mine ? "You" : "🐛 The Caterpillar"}</p>${html}${extra}</div>`;
     box.appendChild(el);
     box.scrollTop = box.scrollHeight;
