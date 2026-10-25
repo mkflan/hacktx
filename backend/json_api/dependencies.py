@@ -1,7 +1,7 @@
 """The single injection seam. Routes and services get providers only through here."""
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from flask import current_app
@@ -10,6 +10,7 @@ from .config import Settings
 from .contracts import NormalizedProject, NormalizedUser, ProjectDataProvider
 from .errors import AppError
 from .llm.base import LLMProvider
+from .search import DisabledSearch, SearchProvider
 from .services.cache import TTLCache
 
 logger = logging.getLogger("json_api")
@@ -71,6 +72,11 @@ class AppContext:
     llm_provider: LLMProvider | None
     llm_unavailable_reason: str | None
     cache: TTLCache
+    search_provider: SearchProvider = field(default_factory=DisabledSearch)
+
+    @property
+    def search(self) -> SearchProvider:
+        return self.search_provider
 
     @property
     def data(self) -> SafeDataProvider:

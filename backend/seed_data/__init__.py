@@ -9,6 +9,7 @@ found by search engines are added later by scripts/enrich_catalog.py and labeled
 from .projects_a import PROJECTS as _A
 from .projects_b import PROJECTS as _B
 from .projects_c import PROJECTS as _C
+from .starters import STARTER_COMMENTS, STARTERS
 from .vocab import (
     DIFFICULTIES,
     FEATURED_INTERESTS,
@@ -118,6 +119,8 @@ __all__ = [
     "INTERESTS",
     "MAJORS",
     "PROJECTS",
+    "STARTERS",
+    "STARTER_COMMENTS",
     "TIMEFRAME_OPTIONS",
     "USERS",
     "project",

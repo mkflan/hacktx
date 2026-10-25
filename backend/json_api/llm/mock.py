@@ -4,7 +4,9 @@ Output depends on the selected user and the idea/project text, so switching user
 changes results. It only references resource IDs from the supplied bank.
 """
 
+import json
 import math
+import re
 
 from ..api.schemas import PersonalizationPreferences
 from ..contracts import NormalizedProject, NormalizedUser, Resource
@@ -52,9 +54,45 @@ def _target_hours(user: NormalizedUser, base: float) -> tuple[float, list[str]]:
     return base, [f"Time commitment unknown; planned for about {base:g} total hours."]
 
 
+_SOURCES_BLOCK = re.compile(r"<sources>\n(.*?)\n</sources>", re.S)
+_PROJECT_BLOCK = re.compile(r"<catalog_project>\n(.*?)\n</catalog_project>", re.S)
+
+
 class MockLLMProvider:
     mode = "mock"
     model_id = "mock-v1"
+
+    def chat(self, system: str, turns: list[tuple[str, str]]) -> str:
+        """Deterministic mentor reply: echoes the question, gives generic next steps and links
+        only to sources listed in the system prompt (same rule as the real model)."""
+        last = next((c for role, c in reversed(turns) if role == "user"), "")
+        project = None
+        if m := _PROJECT_BLOCK.search(system):
+            try:
+                project = json.loads(m.group(1)).get("name")
+            except ValueError:
+                project = None
+        sources: list[dict] = []
+        if m := _SOURCES_BLOCK.search(system):
+            try:
+                sources = [s for s in json.loads(m.group(1)) if s.get("url")]
+            except ValueError:
+                sources = []
+        about = f"on **{project}**" if project else "on your idea"
+        lines = [
+            f'(Offline mock mentor.) You asked {about}: "{" ".join(last.split())[:160]}"',
+            "",
+            "Here is how I would move next:",
+            "1. Write the one-sentence goal and the two-minute demo you want to show.",
+            "2. Do the smallest step that proves the riskiest part works.",
+            "3. Measure something and write the number down before adding features.",
+        ]
+        if sources:
+            lines += ["", "Sources you already have:"]
+            lines += [f"- [{s['title']}]({s['url']})" for s in sources[:3]]
+        if not project:
+            lines += ["", "When the idea feels scoped, press **Turn into a project starter**."]
+        return "\n".join(lines)
 
     def generate_ideas(
         self,

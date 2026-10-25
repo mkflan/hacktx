@@ -146,7 +146,7 @@ async function personalize() {
         const res = await fetch(`/api/users/${USER_ID}/projects/${PROJECT_ID}/personalize`, {method: "POST", headers: {"Content-Type": "application/json"}, body: "{}"});
         const body = await res.json();
         if (!res.ok) throw new Error(body.error ? body.error.message : res.statusText);
-        const p = body.plan;
+        const p = body.project;
         panel.innerHTML = `
           <article class="bg-panel border-2 border-gold rounded-md p-6 font-magical text-sm text-gray-200 space-y-4">
             <div class="flex items-start justify-between gap-3">
@@ -178,7 +178,7 @@ async function dig() {
     btn.disabled = true; btn.textContent = "Digging…";
     out.innerHTML = "";
     try {
-        const res = await fetch(`/api/projects/${PROJECT_ID}/dig`, {method: "POST", headers: {"Content-Type": "application/json"}, body: "{}"});
+        const res = await fetch(`/projects/${PROJECT_ID}/dig`, {method: "POST", headers: {"Content-Type": "application/json"}, body: "{}"});
         const body = await res.json();
         if (!res.ok) throw new Error(body.error ? body.error.message : res.statusText);
         const items = body.results || [];

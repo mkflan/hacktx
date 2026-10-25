@@ -27,6 +27,7 @@ from .validation import parse_draft, validate_ideas, validate_plan
 logger = logging.getLogger("json_api")
 
 MIN_SECONDS_FOR_CORRECTION = 8.0
+CHAT_MAX_TOKENS = 2048
 _REFUSAL_FINISH_REASONS = frozenset(
     {"SAFETY", "BLOCKLIST", "PROHIBITED_CONTENT", "SPII", "RECITATION"}
 )
@@ -168,25 +169,68 @@ class GeminiLLMProvider:
             return None, errors
         return draft, check(draft)
 
-    def _attempt(self, message: str, schema: dict, deadline: float) -> tuple[str | None, list[str]]:
-        """One API call. Returns (text, errors); raises AppError for non-retryable failures."""
+    # ---- conversation -----------------------------------------------------------------------
+
+    def chat(self, system: str, turns: list[tuple[str, str]]) -> str:
+        deadline = time.monotonic() + self._settings.llm_deadline_seconds
+        contents = [
+            types.Content(
+                role="user" if role == "user" else "model",
+                parts=[types.Part.from_text(text=content)],
+            )
+            for role, content in turns
+        ]
+        config = self._config(system, deadline, max_tokens=CHAT_MAX_TOKENS)
+        text, _finish = self._generate(contents, config)
+        if not text.strip():
+            raise AppError(
+                "LLM_INVALID_OUTPUT", "The model returned an empty reply.", 502, retryable=True
+            )
+        return text
+
+    # ---- one request --------------------------------------------------------------------------
+
+    def _config(
+        self, system: str, deadline: float, *, schema: dict | None = None, max_tokens: int
+    ) -> types.GenerateContentConfig:
         remaining = deadline - time.monotonic()
         if remaining <= 1:
             raise AppError("LLM_TIMEOUT", "The model did not answer in time.", 503, retryable=True)
-
-        config = types.GenerateContentConfig(
-            system_instruction=load_prompt("system.md"),
-            max_output_tokens=self._settings.llm_max_tokens,
-            response_mime_type="application/json",
-            response_json_schema=schema,
+        extra: dict[str, Any] = {}
+        if schema is not None:
+            extra = {"response_mime_type": "application/json", "response_json_schema": schema}
+        return types.GenerateContentConfig(
+            system_instruction=system,
+            max_output_tokens=max_tokens,
             thinking_config=types.ThinkingConfig(
                 thinking_level=self._settings.gemini_thinking.upper()
             ),
             http_options=types.HttpOptions(timeout=int(remaining * 1000)),
+            **extra,
         )
+
+    def _attempt(self, message: str, schema: dict, deadline: float) -> tuple[str | None, list[str]]:
+        """One structured call. Returns (text, errors); raises AppError for hard failures."""
+        config = self._config(
+            load_prompt("system.md"),
+            deadline,
+            schema=schema,
+            max_tokens=self._settings.llm_max_tokens,
+        )
+        text, finish = self._generate(message, config)
+        if finish == "MAX_TOKENS":
+            return text, ["output was truncated; return a shorter, complete JSON object"]
+        if not text:
+            return text, ["the model returned no output"]
+        return text, []
+
+    def _generate(
+        self, contents: Any, config: types.GenerateContentConfig
+    ) -> tuple[str, str | None]:
+        """Call the model once; map provider failures and refusals to AppError."""
         try:
             response = self._client.models.generate_content(
-                model=self._settings.gemini_model, contents=message, config=config
+                model=self._settings.gemini_model, contents=contents, config=config
             )
         except httpx.TimeoutException as exc:
             raise AppError(
@@ -208,11 +252,7 @@ class GeminiLLMProvider:
             raise AppError("LLM_REFUSED", "The model declined this request.", 502)
         parts = (candidate.content.parts or []) if candidate and candidate.content else []
         text = "".join(p.text for p in parts if p.text and not p.thought)
-        if finish == "MAX_TOKENS":
-            return text, ["output was truncated; return a shorter, complete JSON object"]
-        if not text:
-            return text, ["the model returned no output"]
-        return text, []
+        return text, finish
 
 
 def _finish_reason(candidate: Any) -> str | None:

@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% from "_macros.html" import sky %}
+
+{% block title %}Ask the Caterpillar: Research Rabbit{% endblock %}
+
+{#
+  Context from pages.chat_page():
+    user             the current student (required; the route redirects otherwise)
+    project          the catalog project for project mode, or None for general mode
+    serpapi_enabled  whether "Dig deeper" can run a live web search
+#}
+
+{% block content %}
+        {% if project %}
+        {% call sky("Ask the Caterpillar", "About " ~ project.name ~ ". I know the outline, the materials and the sources.", "min-h-[260px]") %}
+            <a href="/projects/{{ project.id }}" class="font-magical text-xs text-slate-700 underline underline-offset-2">← back to the project page</a>
+        {% endcall %}
+        {% else %}
+        {% call sky("Ask the Caterpillar", "Pitch an idea, or ask for one. We will shape it into a project you can finish, then write the full starter.", "min-h-[260px]") %}
+        {% endcall %}
+        {% endif %}
+
+        <section class="relative w-full bg-dirt px-4 pt-14 pb-32 border-t-4 border-[#180e0a] min-h-[600px]">
+            <div class="relative max-w-6xl mx-auto z-20 text-cream grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                <!-- CONVERSATION -->
+                <div class="lg:col-span-2 bg-panel border-2 border-moss rounded-md flex flex-col min-h-[560px]">
+                    <div id="messages" class="flex-grow p-5 space-y-4 overflow-y-auto max-h-[70vh] font-magical text-sm"></div>
+                    <form id="chatForm" class="border-t border-moss p-4 space-y-3">
+                        <textarea id="chatInput" rows="3" maxlength="4000" required
+                                  placeholder="{{ 'Where are you stuck, or what do you want to try next?' if project else 'Describe the project you have in mind, or what you wish existed.' }}"
+                                  class="field"></textarea>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <button type="submit" id="sendBtn" class="btn-gold">Ask</button>
+                            <label class="flex items-center gap-2 font-magical text-xs text-gray-300 {{ '' if serpapi_enabled else 'opacity-60' }}" title="{{ 'Runs a live SerpApi search (YouTube + web) and lets the Caterpillar cite the results' if serpapi_enabled else 'SERPAPI_API_KEY is not set on the server' }}">
+                                <input type="checkbox" id="digToggle" class="accent-[#d4af37]" {{ '' if serpapi_enabled else 'disabled' }}>
+                                🔎 Dig deeper on the web{{ '' if serpapi_enabled else ' (unavailable)' }}
+                            </label>
+                            {% if not project %}
+                            <button type="button" id="starterBtn" class="btn-moss ml-auto hidden">✨ Turn into a project starter</button>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+
+                <!-- SIDEBAR -->
+                <aside class="space-y-4">
+                    <div class="bg-panel border-2 border-moss rounded-md p-5 font-magical text-xs text-gray-300">
+                        <p class="font-mystical text-xs text-gold uppercase tracking-wider font-bold mb-2">Talking as</p>
+                        <p class="text-cream">{{ user.username }}</p>
+                        <p class="text-gray-400">{{ user.major }} &middot; {{ user.time_commitment.raw or "time unknown" }} &middot; {{ user.skill_level or "any difficulty" }}</p>
+                        <p class="text-gray-500 mt-1">{{ user.interests|join(", ") }}</p>
+                    </div>
+                    {% if project %}
+                    <div class="bg-panel border-2 border-moss rounded-md p-5 font-magical text-xs text-gray-300">
+                        <p class="font-mystical text-xs text-gold uppercase tracking-wider font-bold mb-2">The Caterpillar knows</p>
+                        <p class="text-cream mb-1">{{ project.name }}</p>
+                        <p class="text-gray-400 mb-2">{{ project.difficulty or "difficulty unknown" }} &middot; {{ project.timeline|timeframe }}</p>
+                        <p class="text-gray-500">{{ project.resources|length }} source{{ '' if project.resources|length == 1 else 's' }}, {{ project.materials|length }} material{{ '' if project.materials|length == 1 else 's' }}, {{ (project.getting_started or '').splitlines()|length }} outline steps.</p>
+                        <ul class="mt-3 space-y-1">
+                            {% for r in project.resources[:6] %}
+                            <li>{% if r.url %}<a href="{{ r.url }}" target="_blank" rel="noopener" class="text-gold hover:underline">{{ r.title }}</a>{% else %}<span class="text-gray-200">{{ r.title }}</span>{% endif %}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% else %}
+                    <div class="bg-panel border-2 border-moss rounded-md p-5 font-magical text-xs text-gray-300 space-y-2">
+                        <p class="font-mystical text-xs text-gold uppercase tracking-wider font-bold">How this works</p>
+                        <p>1. Pitch your idea in a sentence or two.</p>
+                        <p>2. The Caterpillar asks what matters and proposes a scope that fits your time.</p>
+                        <p>3. Press <span class="text-cream">Turn into a project starter</span>: SerpApi finds real tutorials and papers, Gemini writes the plan, and you can post it to Wonderland.</p>
+                    </div>
+                    {% endif %}
+                    <p class="font-magical text-[10px] text-gray-600">The mentor can only link to sources it was given (the project's resources or live search results). Anything else is removed before you see it.</p>
+                </aside>
+            </div>
+
+            <div id="starterPanel" class="relative max-w-6xl mx-auto z-20 mt-8 hidden"></div>
+        </section>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/rabbit.js"></script>
+<script>
+const USER_ID = {{ user.id|tojson }};
+const PROJECT = {{ project|tojson if project else 'null' }};
+const messages = [];   // [{role, content}] kept in the browser only
+let starterPlan = null;
+
+const box = document.getElementById("messages");
+const form = document.getElementById("chatForm");
+const input = document.getElementById("chatInput");
+const sendBtn = document.getElementById("sendBtn");
+const starterBtn = document.getElementById("starterBtn");
+
+function bubble(role, html, extra = "") {
+    const mine = role === "user";
+    const el = document.createElement("div");
+    el.className = mine ? "flex justify-end" : "flex justify-start";
+    el.innerHTML = `<div class="max-w-[85%] rounded-md px-4 py-3 ${mine ? "bg-panel-2 border border-gold/60 text-cream" : "bg-[#131f1b] border border-moss text-gray-200"} space-y-2">
+        <p class="text-[10px] uppercase tracking-wider ${mine ? "text-gold" : "text-gray-500"}">${mine ? "You" : "🐛 The Caterpillar"}</p>${html}${extra}</div>`;
+    box.appendChild(el);
+    box.scrollTop = box.scrollHeight;
+    return el;
+}
+
+bubble("assistant", `<p>${PROJECT
+    ? `I know <strong class="text-cream">${esc(PROJECT.name)}</strong>: the outline, the materials and the sources. Tell me where you are, or what you want to try next.`
+    : "Tell me the project you have in mind, or the problem you wish someone would solve. I will help you shape it into something you can finish, then write the full starter."}</p>`);
+
+async function send(text) {
+    messages.push({ role: "user", content: text });
+    bubble("user", `<p>${esc(text)}</p>`);
+    const thinking = bubble("assistant", `<p class="text-gray-500">thinking…</p>`);
+    sendBtn.disabled = true;
+    try {
+        const res = await fetch(`/api/users/${USER_ID}/assistant`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ project_id: PROJECT ? PROJECT.id : null, messages: messages.slice(-12), dig_deeper: document.getElementById("digToggle").checked }),
+        });
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error ? body.error.message : res.statusText);
+        messages.push({ role: "assistant", content: body.reply });
+        const notes = (body.warnings || []).filter(w => w.code !== "MOCK_GENERATION").map(w => w.message);
+        thinking.remove();
+        bubble("assistant", renderMarkdown(body.reply),
+            renderSources(body.web_results, "Dug up live with SerpApi") +
+            (notes.length ? `<p class="text-[10px] text-gray-500">${notes.map(esc).join(" ")}</p>` : "") +
+            `<p class="text-[10px] text-gray-600">${esc(body.generation_mode)}${body.model ? " · " + esc(body.model) : ""}</p>`);
+        if (starterBtn && messages.filter(m => m.role === "user").length >= 1) starterBtn.classList.remove("hidden");
+    } catch (err) {
+        thinking.remove();
+        bubble("assistant", `<p class="text-pink">The Caterpillar could not answer: ${esc(err.message)}</p>`);
+        messages.pop();
+    } finally { sendBtn.disabled = false; input.focus(); }
+}
+
+form.addEventListener("submit", (e) => { e.preventDefault(); const t = input.value.trim(); if (!t) return; input.value = ""; send(t); });
+input.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); } });
+
+async function makeStarter() {
+    const panel = document.getElementById("starterPanel");
+    const firstPitch = messages.find(m => m.role === "user");
+    if (!firstPitch) return;
+    starterBtn.disabled = true; starterBtn.textContent = "✨ Writing the starter… (15-40 s)";
+    panel.classList.remove("hidden");
+    panel.innerHTML = "<div class='bg-panel border-2 border-moss rounded-md p-6 font-magical text-sm text-gray-300'>Digging up sources with SerpApi and writing the plan with Gemini…</div>";
+    try {
+        const res = await fetch(`/api/users/${USER_ID}/starter`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ idea: firstPitch.content.slice(0, 2000), conversation: messages.slice(-12), dig_deeper: document.getElementById("digToggle").disabled ? false : true }),
+        });
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error ? body.error.message : res.statusText);
+        starterPlan = body;
+        panel.innerHTML = `
+          <div class="flex flex-wrap items-center gap-3 mb-4">
+            <h2 class="font-mystical text-sm md:text-base text-gold uppercase tracking-wider font-bold">Your project starter</h2>
+            <form method="post" action="/forum/starters" class="ml-auto flex items-center gap-2">
+              <input type="hidden" name="plan_json" id="planJson">
+              <button type="submit" class="btn-gold">📜 Post to Wonderland</button>
+            </form>
+          </div>
+          ${renderPlan(body.project, body)}
+          ${renderSources(body.web_results, "Sources dug up live for this idea with SerpApi")}`;
+        document.getElementById("planJson").value = JSON.stringify({ plan: body.project, original_idea: body.original_idea, generation_mode: body.generation_mode, web_results: body.web_results });
+        starterBtn.textContent = "✨ Rewrite the starter";
+        panel.scrollIntoView({ behavior: "smooth" });
+    } catch (err) {
+        panel.innerHTML = `<div class='bg-panel border-2 border-pink rounded-md p-6 font-magical text-sm text-pink'>Could not write the starter: ${esc(err.message)}</div>`;
+        starterBtn.textContent = "✨ Try again";
+    } finally { starterBtn.disabled = false; }
+}
+starterBtn?.addEventListener("click", makeStarter);
+</script>
+{% endblock %}

@@ -58,10 +58,11 @@ def spy() -> SpyLLM:
 
 @pytest.fixture
 def make_client(settings):
-    def _make(data_provider=None, llm_provider=None, settings_override=None):
+    def _make(data_provider=None, llm_provider=None, settings_override=None, search_provider=None):
         app = create_app(
             data_provider=data_provider,
             llm_provider=llm_provider,
+            search_provider=search_provider,
             settings=settings_override or settings,
         )
         app.testing = True

@@ -160,50 +160,49 @@ def seed_forum(conn: sqlite3.Connection) -> None:
         conn.execute(COMMENTS, (comment_id, post_id, users[author], body, created))
 
 
-def insert_starter(
-    conn: sqlite3.Connection,
-    *,
-    post_id: int | None,
-    user_id: int,
-    project_id: int | None,
-    title: str,
-    body: str,
-    majors,
-    interests,
-    difficulty: str | None,
-    estimated_hours: float | None,
-    starter: dict,
-    created_at: str | None = None,
-) -> int:
-    """A forum 'starter': a generated project plan posted for others to pick up."""
-    cur = conn.execute(
-        POSTS
-        if post_id is not None
-        else POSTS.replace("(id, user_id", "(user_id").replace("VALUES (?, ?", "VALUES (?", 1),  # noqa: E501
-        tuple(
-            v
-            for v in (
+STARTER_POST_ID_BASE = 100  # fixed ids keep the seed idempotent and clear of live posts
+
+
+def seed_starters(conn: sqlite3.Connection) -> None:
+    """Community project starters (seed_data/starters.py) and a few comments on them."""
+    users = user_ids_by_name(conn)
+    for index, item in enumerate(seed_data.STARTERS):
+        plan = item["payload"]["plan"]
+        post_id = STARTER_POST_ID_BASE + index + 1
+        body = plan["summary"] + "\n\nDeliverable: " + plan["deliverable"]
+        conn.execute(
+            POSTS,
+            (
                 post_id,
-                user_id,
-                project_id,
+                users[item["author"]],
+                None,
                 "starter",
-                title,
+                plan["name"],
+                body[:2000],
+                csv(plan["associated_majors"]),
+                csv(plan["interests"]),
+                plan["difficulty"],
+                plan["estimated_total_hours"],
+                json.dumps(item["payload"], ensure_ascii=False),
+                item["created_at"],
+            ),
+        )
+    for offset, (index, author, body, created) in enumerate(seed_data.STARTER_COMMENTS):
+        conn.execute(
+            COMMENTS,
+            (
+                STARTER_POST_ID_BASE + offset + 1,
+                STARTER_POST_ID_BASE + index + 1,
+                users[author],
                 body,
-                csv(majors),
-                csv(interests),
-                difficulty,
-                estimated_hours,
-                json.dumps(starter, ensure_ascii=False),
-                created_at,
-            )
-            if not (post_id is None and v is post_id)
-        ),
-    )
-    return post_id if post_id is not None else cur.lastrowid
+                created,
+            ),
+        )
 
 
 def seed_all(conn: sqlite3.Connection) -> None:
     seed_users(conn)
     seed_projects(conn)
     seed_forum(conn)
+    seed_starters(conn)
     conn.commit()

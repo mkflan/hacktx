@@ -1,0 +1,78 @@
+{# Server-side view of a generated ProjectPlan (forum starters). Mirrors renderPlan() in rabbit.js. #}
+
+{% macro source_list(items) -%}
+    <ul class="space-y-1">
+        {% for r in items %}
+        <li class="font-magical text-xs text-gray-200">
+            {% if r.url %}<a href="{{ r.url }}" target="_blank" rel="noopener" class="hover:text-gold">{{ r.title }}</a>{% else %}{{ r.title }}{% endif %}
+            <span class="text-[10px] text-gray-500">&middot; {{ r.kind }}{% if r.provider %} &middot; {{ r.provider }}{% endif %}{% if r.source and r.source != "authored" %} &middot; found via {{ r.source|replace("serpapi:", "SerpApi ") }}{% endif %}</span>
+        </li>
+        {% endfor %}
+    </ul>
+{%- endmacro %}
+
+{% macro plan_view(plan, meta) -%}
+    <article class="bg-panel border-2 border-gold rounded-md p-6 font-magical text-sm text-gray-200 space-y-4">
+        <div class="flex items-start justify-between gap-3">
+            <h2 class="font-mystical text-sm md:text-base text-gold uppercase tracking-wider font-bold">{{ plan.name }}</h2>
+            <span class="text-[10px] text-gray-500 whitespace-nowrap">{{ meta.get("generation_mode", "") }} &middot; {{ plan.estimated_total_hours|hours }} h{% if plan.difficulty %} &middot; {{ plan.difficulty }}{% endif %}</span>
+        </div>
+        <p>{{ plan.summary }}</p>
+        <p><span class="text-gold">Deliverable:</span> {{ plan.deliverable }}</p>
+        <p><span class="text-gold">First action:</span> {{ plan.first_action }}</p>
+
+        <div>
+            <h3 class="text-gold uppercase text-xs tracking-wider mb-1">Milestones</h3>
+            <ol class="list-decimal pl-5 space-y-2">
+                {% for m in plan.milestones %}
+                <li><span class="text-cream font-semibold">{{ m.title }}</span> <span class="text-gray-500">({{ m.estimated_hours|hours }} h)</span><br>{{ m.objective }}</li>
+                {% endfor %}
+            </ol>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4">
+            <div>
+                <h3 class="text-gold uppercase text-xs tracking-wider mb-1">Materials</h3>
+                {% if plan.materials %}<ul class="list-disc pl-5 space-y-1">{% for m in plan.materials %}<li>{{ m.name }}{% if m.estimated_cost_usd is not none %} <span class="text-gray-500">~${{ m.estimated_cost_usd|hours }}</span>{% endif %}</li>{% endfor %}</ul>{% else %}<p class="text-gray-500">none</p>{% endif %}
+            </div>
+            <div>
+                <h3 class="text-gold uppercase text-xs tracking-wider mb-1">Software</h3>
+                {% if plan.software %}<ul class="list-disc pl-5 space-y-1">{% for m in plan.software %}<li>{{ m.name }}</li>{% endfor %}</ul>{% else %}<p class="text-gray-500">none</p>{% endif %}
+            </div>
+        </div>
+
+        {% if plan.suggested_schedule %}
+        <div>
+            <h3 class="text-gold uppercase text-xs tracking-wider mb-1">Schedule</h3>
+            <p class="text-xs text-gray-400">{% for s in plan.suggested_schedule %}Week {{ s.week }}: {{ s.focus }} ({{ s.hours|hours }} h){{ " &middot; "|safe if not loop.last }}{% endfor %}</p>
+        </div>
+        {% endif %}
+
+        <div>
+            <h3 class="text-gold uppercase text-xs tracking-wider mb-1">Customize it</h3>
+            <ul class="list-disc pl-5 space-y-1">{% for c in plan.customization_ideas %}<li>{{ c }}</li>{% endfor %}</ul>
+        </div>
+
+        {% set sources = plan.get("resources", []) + plan.get("research_connections", []) + plan.get("similar_examples", []) %}
+        {% if sources %}
+        <div>
+            <h3 class="text-gold uppercase text-xs tracking-wider mb-1">Sources</h3>
+            {{ source_list(sources) }}
+        </div>
+        {% elif plan.suggested_search_queries %}
+        <p class="text-xs text-gray-500">No supplied source fit this plan. Searches to try: {{ plan.suggested_search_queries|join("; ") }}</p>
+        {% endif %}
+
+        {% if plan.scope_adjustments %}
+        <div>
+            <h3 class="text-gold uppercase text-xs tracking-wider mb-1">Scope changes for the author's time</h3>
+            <ul class="list-disc pl-5 space-y-1">{% for s in plan.scope_adjustments %}<li>{{ s }}</li>{% endfor %}</ul>
+        </div>
+        {% endif %}
+
+        <details class="text-xs text-gray-500">
+            <summary class="cursor-pointer">Assumptions and notes</summary>
+            <ul class="list-disc pl-5 space-y-1 mt-1">{% for a in plan.assumptions %}<li>{{ a }}</li>{% endfor %}</ul>
+        </details>
+    </article>
+{%- endmacro %}

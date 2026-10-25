@@ -62,6 +62,30 @@ class PersonalizeRequest(_Request):
     preferences: PersonalizationPreferences | None = None
 
 
+class ChatTurn(_Request):
+    role: Literal["user", "assistant"]
+    content: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=4000)]
+
+
+class AssistantRequest(_Request):
+    """One conversational turn with the Caterpillar. The browser keeps the history and sends it
+    back every time; nothing is stored server-side."""
+
+    project_id: PathId | None = None
+    messages: list[ChatTurn] = Field(min_length=1, max_length=30)
+    dig_deeper: bool = False
+    preferences: PersonalizationPreferences | None = None
+
+
+class StarterRequest(_Request):
+    """Turn a developed idea into a full ProjectPlan, with web sources found for the idea."""
+
+    idea: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=2000)]
+    conversation: list[ChatTurn] = Field(default_factory=list, max_length=30)
+    dig_deeper: bool = True
+    preferences: PersonalizationPreferences | None = None
+
+
 # ---- responses -------------------------------------------------------------------------------
 
 

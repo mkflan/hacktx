@@ -9,7 +9,14 @@ from ..api.schemas import PersonalizationPreferences
 from ..contracts import NormalizedProject, NormalizedUser, Resource
 
 PROMPTS_DIR = Path(__file__).parent / "prompts"
-PROMPT_FILES = ("system.md", "generate_ideas.md", "elaborate_idea.md", "personalize_project.md")
+PROMPT_FILES = (
+    "system.md",
+    "generate_ideas.md",
+    "elaborate_idea.md",
+    "personalize_project.md",
+    "assistant_project.md",
+    "assistant_general.md",
+)
 EXCERPT_CHARS = 600
 
 
@@ -26,11 +33,14 @@ def prompt_version() -> str:
     return digest.hexdigest()[:12]
 
 
-def _block(tag: str, payload: object) -> str:
+def block(tag: str, payload: object) -> str:
     # "<" is escaped so text from users or the database can never contain a closing tag that
     # ends its own data block; the escaped form is still valid JSON the model reads normally.
     text = json.dumps(payload, ensure_ascii=False, indent=1).replace("<", "\\u003c")
     return f"<{tag}>\n{text}\n</{tag}>"
+
+
+_block = block
 
 
 def bank_payload(bank: list[Resource]) -> list[dict]:

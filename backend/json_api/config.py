@@ -39,7 +39,7 @@ class Settings:
     cors_origins: tuple[str, ...] = DEFAULT_CORS_ORIGINS
     cache_max_entries: int = 100
     cache_ttl_seconds: float = 900.0
-    max_request_bytes: int = 32 * 1024
+    max_request_bytes: int = 128 * 1024  # a chat history of 30 turns fits comfortably
     host: str = "127.0.0.1"
     port: int = 8000
 

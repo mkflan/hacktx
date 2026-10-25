@@ -91,7 +91,7 @@ def test_validation_errors_have_details_without_echoing_input(client):
 def test_oversized_body_is_rejected(client):
     response = client.post(
         "/api/users/fixture-ece/chat",
-        data=b'{"mode":"elaborate_idea","idea":"' + b"x" * 40_000 + b'"}',
+        data=b'{"mode":"elaborate_idea","idea":"' + b"x" * 140_000 + b'"}',
         content_type="application/json",
     )
     assert response.status_code == 413

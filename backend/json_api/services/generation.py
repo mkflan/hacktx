@@ -169,10 +169,20 @@ def generate_ideas(ctx: AppContext, user_id: str, req: GenerateIdeasRequest) -> 
     return _cached(ctx, key, produce)
 
 
-def elaborate_idea(ctx: AppContext, user_id: str, req: ElaborateIdeaRequest) -> dict:
+def elaborate_idea(
+    ctx: AppContext,
+    user_id: str,
+    req: ElaborateIdeaRequest,
+    extra_resources: list[Resource] = (),
+) -> dict:
+    """extra_resources (for example live web results found for the idea) go first in the bank
+    and are the only way a plan can cite something outside the catalog."""
     user = _load_user(ctx, user_id)
     projects = ctx.data.list_projects()
-    bank = build_resource_bank(projects, [req.idea])
+    extra_ids = {r.id for r in extra_resources}
+    bank = list(extra_resources) + [
+        r for r in build_resource_bank(projects, [req.idea]) if r.id not in extra_ids
+    ]
     llm = ctx.llm
 
     def produce() -> dict:

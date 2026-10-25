@@ -16,6 +16,7 @@ from json_api.config import Settings
 from json_api.contracts import ProjectDataProvider
 from json_api.llm.base import LLMProvider
 from pages import pages
+from serp import SerpApiClient
 from sqlite_provider import SQLiteProjectDataProvider
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -49,7 +50,16 @@ def create_app(
 
     if data_provider is None and settings.data_mode != "fake":
         data_provider = SQLiteProjectDataProvider(db.get_db)
-    init_json_api(app, data_provider=data_provider, llm_provider=llm_provider, settings=settings)
+    search_provider = (
+        SerpApiClient(settings.serpapi_api_key, db.get_db) if settings.serpapi_api_key else None
+    )
+    init_json_api(
+        app,
+        data_provider=data_provider,
+        llm_provider=llm_provider,
+        search_provider=search_provider,
+        settings=settings,
+    )
     app.register_blueprint(pages)
     return app
 

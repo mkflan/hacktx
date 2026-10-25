@@ -8,12 +8,14 @@ from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from ..dependencies import get_context
 from ..errors import not_found, request_validation
-from ..services import catalog, generation, ranking
+from ..services import assistant, catalog, generation, ranking
 from .schemas import (
+    AssistantRequest,
     PathId,
     PersonalizeRequest,
     ProjectsQuery,
     RecommendationsRequest,
+    StarterRequest,
     UserSummary,
     chat_request_adapter,
 )
@@ -71,6 +73,7 @@ def health():
             "llm_mode": ctx.settings.llm_mode,
             "llm_configured": llm is not None,
             "llm_model": llm.model_id if llm else None,
+            "search_enabled": ctx.search.enabled,
             "persistence": "none (generated plans are not saved)",
         }
     )
@@ -155,3 +158,19 @@ def personalize(user_id: str, project_id: str):
     ctx = get_context()
     body = _body(PersonalizeRequest)
     return _json(generation.personalize_project(ctx, _id(user_id), _id(project_id), body))
+
+
+@bp.post("/api/users/<user_id>/assistant")
+def assistant_reply(user_id: str):
+    """One turn with the Caterpillar (project mode when project_id is given)."""
+    ctx = get_context()
+    body = _body(AssistantRequest)
+    return _json(assistant.reply(ctx, _id(user_id), body))
+
+
+@bp.post("/api/users/<user_id>/starter")
+def assistant_starter(user_id: str):
+    """Turn a developed idea into a full project starter with web sources."""
+    ctx = get_context()
+    body = _body(StarterRequest)
+    return _json(assistant.starter(ctx, _id(user_id), body))

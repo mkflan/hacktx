@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% from "_macros.html" import sky, difficulty_badge %}
+{% from "_plan.html" import plan_view %}
+
+{% block title %}{{ post.title }}: Wonderland{% endblock %}
+
+{#
+  Context from pages.show_post(): post (see forum.html), users, limits, error
+#}
+
+{% block content %}
+        {% call sky(post.title, post.body.split("\n")[0], "min-h-[300px]") %}
+            <p class="font-magical text-sm font-semibold text-slate-700">
+                {{ 'Project starter' if post.kind == 'starter' else 'Discussion' }} by {{ post.author }} ({{ post.author_major }}) &middot; {{ post.created_at }}
+            </p>
+            <div class="flex flex-wrap justify-center gap-2 pt-1 font-magical text-xs">
+                {% for m in post.majors %}<span class="bg-cream/90 border border-purple-300/60 rounded-full px-3 py-1 text-slate-800">{{ m }}</span>{% endfor %}
+                {% for tag in post.interests %}<span class="bg-pink/60 border border-pink rounded-full px-3 py-1 text-slate-800">{{ tag }}</span>{% endfor %}
+            </div>
+        {% endcall %}
+
+        <section class="relative w-full bg-dirt px-4 pt-14 pb-32 border-t-4 border-[#180e0a] min-h-[600px]">
+            <div class="relative max-w-4xl mx-auto z-20 text-cream space-y-8">
+                <div class="flex flex-wrap items-center gap-3">
+                    <a href="/forum" class="font-magical text-xs text-gray-400 hover:text-gold">← back to Wonderland</a>
+                    {% if post.difficulty %}{{ difficulty_badge(post.difficulty) }}{% endif %}
+                    {% if post.estimated_hours %}<span class="font-magical text-xs text-gray-400">{{ post.estimated_hours|hours }} h</span>{% endif %}
+                    {% if post.starter and post.starter.get("original_idea") %}
+                    <span class="font-magical text-[11px] text-gray-500">Pitched as: "{{ post.starter.original_idea.split("\n")[0][:160] }}"</span>
+                    {% endif %}
+                </div>
+
+                {% if post.starter and post.starter.get("plan") %}
+                    {{ plan_view(post.starter.plan, post.starter) }}
+                    {% if post.starter.get("web_results") %}
+                    <div class="bg-panel border-2 border-moss rounded-md p-5">
+                        <h3 class="font-mystical text-xs text-gold uppercase tracking-wider font-bold mb-2">Sources dug up for this idea with SerpApi</h3>
+                        <ul class="space-y-2">
+                            {% for r in post.starter.web_results %}
+                            <li class="font-magical text-xs text-gray-200 flex gap-3">
+                                {% if r.thumbnail_url %}<img src="{{ r.thumbnail_url }}" alt="" class="w-20 h-12 object-cover rounded border border-moss shrink-0">{% endif %}
+                                <span><a href="{{ r.url }}" target="_blank" rel="noopener" class="hover:text-gold">{{ r.title }}</a><span class="block text-[10px] text-gray-500">{{ r.kind }} &middot; {{ r.provider or "" }} &middot; found via {{ r.source|replace("serpapi:", "SerpApi ") }}</span></span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                {% else %}
+                <article class="bg-panel border-2 border-moss rounded-md p-6 font-magical text-sm text-gray-200 whitespace-pre-line">{{ post.body }}</article>
+                {% endif %}
+
+                <!-- COMMENTS -->
+                <article class="bg-panel border-2 border-moss rounded-md p-6">
+                    <h3 class="font-mystical text-xs text-gold uppercase tracking-wider font-bold mb-3">{{ post.comments|length }} comment{{ '' if post.comments|length == 1 else 's' }}</h3>
+                    {% if post.comments %}
+                    <ul class="space-y-3 mb-4">
+                        {% for c in post.comments %}
+                        <li class="font-magical text-xs text-gray-300">
+                            <span class="text-gold">{{ c.author }}</span>
+                            <span class="text-gray-500">&middot; {{ c.created_at }}</span>
+                            <p class="whitespace-pre-line mt-1">{{ c.body }}</p>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                    <form method="post" action="/forum/posts/{{ post.id }}/comments" class="flex flex-col sm:flex-row gap-2 font-magical text-xs">
+                        <select name="user_id" required aria-label="Comment as" class="bg-panel-2 text-cream border border-moss rounded px-2 py-2">
+                            <option value="" disabled {{ '' if current_user else 'selected' }}>Comment as</option>
+                            {% for u in users %}<option value="{{ u.id }}" {{ 'selected' if current_user and u.id|string == current_user.id }}>{{ u.username }}</option>{% endfor %}
+                        </select>
+                        <input type="text" name="body" required maxlength="{{ limits.comment }}" placeholder="Add a comment" aria-label="Comment"
+                               class="flex-grow bg-panel-2 text-cream border border-moss rounded px-3 py-2">
+                        <button type="submit" class="btn-moss">Reply</button>
+                    </form>
+                </article>
+            </div>
+        </section>
+{% endblock %}

@@ -4,6 +4,8 @@ Pages call json_api.services directly (no HTTP hop) and read SQLite through the 
 provider. The current student is a signed cookie set by the landing form; there is no login.
 """
 
+import json
+
 from flask import (
     Blueprint,
     abort,
@@ -16,12 +18,14 @@ from flask import (
 )
 
 import db
+import enrich
 import forum
 import profiles
 from json_api.api.schemas import ProjectCard
-from json_api.contracts import NormalizedProject, NormalizedUser
+from json_api.contracts import NormalizedProject, NormalizedUser, TimeValue
 from json_api.dependencies import get_context
 from json_api.errors import AppError
+from json_api.search import SearchError
 from json_api.services import ranking
 from json_api.services.normalize import majors_match, tags_match
 from json_api.services.timefit import TIMEFRAME_BUCKETS, timeframe_bucket
@@ -58,6 +62,8 @@ def inject_nav():
 
 @pages.app_template_filter("timeframe")
 def timeframe_filter(timeline) -> str:
+    if isinstance(timeline, dict):  # templates get model_dump() dicts
+        timeline = TimeValue.model_validate(timeline)
     bucket = timeframe_bucket(timeline) if timeline is not None else None
     return bucket[1] if bucket else "Timeframe unknown"
 
@@ -240,21 +246,83 @@ def project_page(project_id: str):
         resource_groups=groups,
         user=user.model_dump(mode="json") if user else None,
         data_source=ctx.data_source,
-        serpapi_enabled=bool(ctx.settings.serpapi_api_key),
+        serpapi_enabled=ctx.search.enabled,
+    )
+
+
+@pages.route("/projects/<project_id>/dig", methods=["POST"])
+def dig_project(project_id: str):
+    """Live SerpApi search for the project; results are stored on the project (JSON reply)."""
+    ctx = get_context()
+    project = ctx.data.get_project(project_id)
+    if project is None:
+        abort(404)
+    if not ctx.search.enabled:
+        return _json_error("SEARCH_UNAVAILABLE", "Web search is not configured (SERPAPI_API_KEY).")
+    try:
+        found, new = enrich.dig_project(db.get_db(), ctx.search, project)
+    except SearchError as exc:
+        return _json_error("SEARCH_FAILED", exc.message)
+    return jsonify(
+        results=[r.model_dump(mode="json") for r in found],
+        new=new,
+        cache_hit=bool(found) and new == 0,
+    )
+
+
+def _json_error(code: str, message: str, status: int = 503):
+    return jsonify(error={"code": code, "message": message, "retryable": True}), status
+
+
+# ---- chat -----------------------------------------------------------------------------------
+
+
+@pages.route("/chat")
+def chat_page():
+    user = current_user()
+    if user is None:
+        return redirect(url_for("pages.index", new=1))
+    ctx = get_context()
+    project = None
+    if project_id := request.args.get("project"):
+        project = ctx.data.get_project(project_id)
+        if project is None:
+            abort(404)
+    return render_template(
+        "chat.html",
+        user=user.model_dump(mode="json"),
+        project=project.model_dump(mode="json") if project else None,
+        serpapi_enabled=ctx.search.enabled,
     )
 
 
 # ---- forum ----------------------------------------------------------------------------------
 
+LIMITS = {"title": forum.TITLE_MAX, "post": forum.POST_MAX, "comment": forum.COMMENT_MAX}
+
 
 def render_forum(error=None, status=200, form=None):
     conn = db.get_db()
+    filters = {
+        "q": (request.args.get("q") or "").strip()[:100],
+        "kind": request.args.get("kind") or "",
+        "difficulty": request.args.get("difficulty") or "",
+        "sort": request.args.get("sort") or "newest",
+    }
     return render_template(
         "forum.html",
-        posts=forum.list_posts(conn),
+        posts=forum.list_posts(
+            conn,
+            q=filters["q"] or None,
+            kind=filters["kind"] or None,
+            difficulty=filters["difficulty"] or None,
+            sort=filters["sort"],
+        ),
+        filters=filters,
+        sorts=forum.SORT_LABELS,
         users=forum.list_users(conn),
         projects=forum.list_projects(conn),
-        limits={"title": forum.TITLE_MAX, "post": forum.POST_MAX, "comment": forum.COMMENT_MAX},
+        limits=LIMITS,
         error=error,
         form=form or {},
     ), status
@@ -263,6 +331,34 @@ def render_forum(error=None, status=200, form=None):
 @pages.route("/forum")
 def show_forum():
     return render_forum()
+
+
+@pages.route("/forum/posts/<int:post_id>")
+def show_post(post_id: int):
+    conn = db.get_db()
+    post = forum.get_post(conn, post_id)
+    if post is None:
+        abort(404)
+    return render_template(
+        "post.html", post=post, users=forum.list_users(conn), limits=LIMITS, error=None
+    )
+
+
+@pages.route("/forum/starters", methods=["POST"])
+def post_starter():
+    """Publish a generated project starter from the chat page as a forum post."""
+    user = current_user()
+    if user is None:
+        return render_forum(error="Create a profile before posting a starter.", status=400)
+    try:
+        payload = json.loads(request.form.get("plan_json") or "")
+    except ValueError:
+        return render_forum(error="That starter could not be read.", status=400)
+    try:
+        post_id = forum.create_starter(db.get_db(), user.id, payload)
+    except forum.ForumError as exc:
+        return render_forum(error=exc.message, status=exc.status)
+    return redirect(url_for("pages.show_post", post_id=post_id))
 
 
 @pages.route("/forum/posts", methods=["POST"])

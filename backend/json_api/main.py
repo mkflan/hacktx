@@ -13,6 +13,7 @@ from .contracts import ProjectDataProvider
 from .dependencies import EXTENSION_KEY, AppContext
 from .errors import register_error_handlers
 from .llm.base import LLMProvider
+from .search import DisabledSearch, SearchProvider
 from .services.cache import TTLCache
 
 logger = logging.getLogger("json_api")
@@ -53,6 +54,7 @@ def init_json_api(
     *,
     data_provider: ProjectDataProvider | None = None,
     llm_provider: LLMProvider | None = None,
+    search_provider: SearchProvider | None = None,
     settings: Settings | None = None,
 ) -> Flask:
     """Register routes, error handlers and CORS on an existing Flask app."""
@@ -68,6 +70,7 @@ def init_json_api(
         llm_provider=llm,
         llm_unavailable_reason=llm_reason,
         cache=TTLCache(settings.cache_max_entries, settings.cache_ttl_seconds),
+        search_provider=search_provider or DisabledSearch(),
     )
     # Flask ships MAX_CONTENT_LENGTH=None, so setdefault would never apply our bound.
     if app.config.get("MAX_CONTENT_LENGTH") is None:
@@ -99,8 +102,13 @@ def create_app(
     data_provider: ProjectDataProvider | None = None,
     llm_provider: LLMProvider | None = None,
     settings: Settings | None = None,
+    search_provider: SearchProvider | None = None,
 ) -> Flask:
     app = Flask(__name__)
     return init_json_api(
-        app, data_provider=data_provider, llm_provider=llm_provider, settings=settings
+        app,
+        data_provider=data_provider,
+        llm_provider=llm_provider,
+        search_provider=search_provider,
+        settings=settings,
     )

@@ -41,3 +41,8 @@ class LLMProvider(Protocol):
         project: NormalizedProject,
         resource_bank: list[Resource],
     ) -> ProjectPlanDraft: ...
+
+    def chat(self, system: str, turns: list[tuple[str, str]]) -> str:
+        """One conversational reply (plain text / markdown) to the turns, each
+        ("user" | "assistant", content). The caller supplies the full system prompt."""
+        ...
