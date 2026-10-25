@@ -4,19 +4,19 @@
 {% block title %}Research Rabbit: The Rabbit Hole Research Hub{% endblock %}
 
 {% block content %}
-        {% call sky("Join the Research Renaissance", "Dive down the rabbit hole! Tell us your major, your interests and your time, and we will dig up a project that fits.", "min-h-[460px]") %}
+        {% call sky("Join the Research Renaissance", "Dive down the rabbit hole! Tell us your major, your interests and your time, and we will dig up a project that fits.", "min-h-[460px]", fancy=True) %}
             <div class="flex flex-wrap gap-3 justify-center pt-4">
                 {% if current_user %}
-                <a href="/dashboard" class="btn-gold">Open my Rabbit Hole</a>
-                <button type="button" onclick="openInterestModal()" class="font-magical text-sm font-semibold text-slate-800 bg-cream/90 border border-purple-300/60 rounded px-5 py-3 hover:bg-white">Start a new profile</button>
+                <a href="/dashboard" class="btn-leaf">Open my Rabbit Hole</a>
+                <button type="button" onclick="openInterestModal()" class="font-magical text-base font-semibold text-slate-800 bg-cream/90 border border-purple-300/60 rounded px-5 py-3 hover:bg-white">Start a new profile</button>
                 {% else %}
-                <button type="button" onclick="openInterestModal()" class="btn-gold">Create your profile</button>
+                <button type="button" onclick="openInterestModal()" class="btn-leaf">Create your profile</button>
                 {% endif %}
             </div>
         {% endcall %}
 
         <!-- UNDERGROUND DIRT SECTION & ROOTS -->
-        <section class="relative w-full bg-dirt px-4 pt-4 pb-32 border-t-4 border-[#180e0a] min-h-[500px]">
+        <section class="relative w-full bg-dirt px-4 pt-4 pb-32 border-t-4 border-[#8a6a4b] min-h-[500px]">
             <svg class="absolute top-0 left-0 w-full h-32 pointer-events-none opacity-40 z-10" viewBox="0 0 1200 100" preserveAspectRatio="none">
                 <path d="M100,0 Q120,40 150,80 T200,100" fill="none" stroke="#5c3a21" stroke-width="4" />
                 <path d="M400,0 Q380,50 350,90" fill="none" stroke="#5c3a21" stroke-width="3" />
@@ -25,28 +25,28 @@
             </svg>
 
             <div class="relative max-w-3xl mx-auto flex justify-center pt-6 pb-12 z-20">
-                <button onclick="openInterestModal()" class="group relative bg-panel-2 border-2 border-gold px-8 py-3.5 rounded-full shadow-xl hover:bg-[#253830] transition-all transform hover:scale-105 cursor-pointer flex items-center space-x-3">
-                    <span class="text-gold text-sm">🌱</span>
-                    <span class="font-mystical text-xs tracking-widest text-gold font-bold">dig deep?</span>
+                <button onclick="openInterestModal()" class="group relative bg-panel-2 border-2 border-leaf px-8 py-3.5 rounded-full hover:bg-[#253830] transition-all transform hover:scale-105 cursor-pointer flex items-center space-x-3">
+                    <span class="text-leaf text-base">🌱</span>
+                    <span class="font-heading text-sm tracking-wide text-leaf font-bold">dig deep?</span>
                 </button>
             </div>
 
             <!-- HOW IT WORKS PANEL -->
-            <div class="relative max-w-4xl mx-auto bg-panel border-2 border-moss rounded-md p-6 md:p-8 z-30 shadow-[0_20px_50px_rgba(0,0,0,0.8)] text-cream">
-                <div class="absolute -top-5 left-6 bg-panel-2 border-2 border-gold px-4 py-1.5 rounded shadow-md">
-                    <span class="font-mystical text-xs tracking-widest text-gold uppercase font-bold">How the rabbit hole works</span>
+            <div class="relative max-w-4xl mx-auto bg-panel border-2 border-moss rounded-md p-6 md:p-8 z-30 text-cream">
+                <div class="absolute -top-5 left-6 bg-panel-2 border-2 border-leaf px-4 py-1.5 rounded">
+                    <span class="font-heading text-sm tracking-wide text-leaf font-bold">How the rabbit hole works</span>
                 </div>
-                <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-6 font-magical text-sm text-gray-300">
+                <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-6 font-magical text-base text-gray-300">
                     <div>
-                        <p class="font-mystical text-xs text-gold uppercase tracking-widest mb-2">1 &middot; Your profile</p>
+                        <p class="font-heading text-sm text-leaf tracking-wide mb-2">1 &middot; Your profile</p>
                         <p>Major, interests, how much time you have and how hard you want it. Thirty seconds, no password.</p>
                     </div>
                     <div>
-                        <p class="font-mystical text-xs text-gold uppercase tracking-widest mb-2">2 &middot; The Rabbit Hole</p>
+                        <p class="font-heading text-sm text-leaf tracking-wide mb-2">2 &middot; The Rabbit Hole</p>
                         <p>Projects ranked for you, then shelves by major, interest, difficulty and timeframe. Every project comes with a getting-started outline, a materials list with where to buy, documentation, tutorials and papers dug up with SerpApi.</p>
                     </div>
                     <div>
-                        <p class="font-mystical text-xs text-gold uppercase tracking-widest mb-2">3 &middot; The Caterpillar</p>
+                        <p class="font-heading text-sm text-leaf tracking-wide mb-2">3 &middot; The Caterpillar</p>
                         <p>A Gemini mentor that knows your project, or helps you turn a pitch into a full project starter you can post to Wonderland for others to pick up.</p>
                     </div>
                 </div>
@@ -56,27 +56,27 @@
 
 {% block after_main %}
 <!-- PROFILE MODAL -->
-<div id="interestModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs {{ '' if open_modal else 'hidden' }} transition-opacity">
-    <div class="relative w-full max-w-xl bg-panel border-2 border-gold rounded-lg p-6 md:p-8 shadow-[0_0_50px_rgba(212,175,55,0.2)] text-cream mx-4 my-6 max-h-[92vh] overflow-y-auto">
-        <button type="button" onclick="closeInterestModal()" aria-label="Close" class="absolute top-4 right-4 text-gold hover:text-white font-mystical text-base cursor-pointer">✕</button>
+<div id="interestModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 {{ '' if open_modal else 'hidden' }} transition-opacity">
+    <div class="relative w-full max-w-xl bg-panel border-2 border-leaf rounded-lg p-6 md:p-8 text-cream mx-4 my-6 max-h-[92vh] overflow-y-auto">
+        <button type="button" onclick="closeInterestModal()" aria-label="Close" class="absolute top-4 right-4 text-leaf hover:text-white font-heading text-lg cursor-pointer">✕</button>
 
-        <h3 class="font-mystical text-lg text-gold mb-1 uppercase tracking-wider text-center font-bold">Unearth Your Research Profile</h3>
-        <p class="font-magical text-xs text-gray-400 text-center mb-6 tracking-wide">Your major, your interests, your time. We do the digging.</p>
+        <h3 class="font-heading text-xl text-leaf mb-1 tracking-wide text-center font-bold">Unearth Your Research Profile</h3>
+        <p class="font-magical text-sm text-gray-400 text-center mb-6 tracking-wide">Your major, your interests, your time. We do the digging.</p>
 
         {% if error %}
-        <p role="alert" class="font-magical text-sm text-pink border border-pink rounded px-4 py-2 mb-4 text-center">{{ error }}</p>
+        <p role="alert" class="font-magical text-base text-pink border border-pink rounded px-4 py-2 mb-4 text-center">{{ error }}</p>
         {% endif %}
 
         <form method="post" action="/users" class="space-y-5">
             <div>
-                <label for="username" class="block font-mystical text-xs tracking-widest text-gold uppercase mb-2">Username</label>
+                <label for="username" class="block font-heading text-sm tracking-wide text-leaf mb-2">Username</label>
                 <input id="username" name="username" type="text" required minlength="2" maxlength="40" autocomplete="username"
                        value="{{ form.get('username', '') }}" placeholder="e.g. sam_builds" class="field">
-                <p class="font-magical text-[11px] text-gray-500 mt-1">Already have one? Type it again to pick up where you left off.</p>
+                <p class="font-magical text-sm text-gray-400 mt-1">Already have one? Type it again to pick up where you left off.</p>
             </div>
 
             <div>
-                <label for="major" class="block font-mystical text-xs tracking-widest text-gold uppercase mb-2">Academic Major</label>
+                <label for="major" class="block font-heading text-sm tracking-wide text-leaf mb-2">Academic Major</label>
                 <div class="relative">
                     <select id="major" name="major" required class="field appearance-none cursor-pointer">
                         <option value="" disabled {{ 'selected' if not form.get('major') }}>Choose your major</option>
@@ -84,18 +84,18 @@
                         <option value="{{ m }}" {{ 'selected' if form.get('major') == m }}>{{ m }}</option>
                         {% endfor %}
                     </select>
-                    <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gold text-xs">▼</div>
+                    <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-leaf text-sm">▼</div>
                 </div>
             </div>
 
             <div>
-                <label class="block font-mystical text-xs tracking-widest text-gold uppercase mb-2">Interests <span class="text-gray-500 normal-case tracking-normal font-magical">(pick a few)</span></label>
+                <label class="block font-heading text-sm tracking-wide text-leaf mb-2">Interests <span class="text-gray-400 normal-case tracking-normal font-magical">(pick a few)</span></label>
                 {% set picked = form.getlist('interests') if form.getlist is defined else [] %}
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-56 overflow-y-auto pr-1">
                     {% for tag in featured_interests %}
-                    <label class="flex items-center space-x-2 bg-[#131f1b] border border-moss p-2 rounded cursor-pointer hover:border-gold transition-colors">
-                        <input type="checkbox" name="interests" value="{{ tag }}" class="accent-[#d4af37]" {{ 'checked' if tag in picked }}>
-                        <span class="font-magical text-xs tracking-wide text-cream">{{ tag }}</span>
+                    <label class="flex items-center space-x-2 bg-[#131f1b] border border-moss p-2 rounded cursor-pointer hover:border-leaf transition-colors">
+                        <input type="checkbox" name="interests" value="{{ tag }}" class="accent-[#74d68a]" {{ 'checked' if tag in picked }}>
+                        <span class="font-magical text-sm tracking-wide text-cream">{{ tag }}</span>
                     </label>
                     {% endfor %}
                 </div>
@@ -105,7 +105,7 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label for="timeframe" class="block font-mystical text-xs tracking-widest text-gold uppercase mb-2">Time you have</label>
+                    <label for="timeframe" class="block font-heading text-sm tracking-wide text-leaf mb-2">Time you have</label>
                     <div class="relative">
                         <select id="timeframe" name="timeframe" required class="field appearance-none cursor-pointer">
                             <option value="" disabled {{ 'selected' if not form.get('timeframe') }}>Choose a timeframe</option>
@@ -113,14 +113,14 @@
                             <option value="{{ key }}" {{ 'selected' if form.get('timeframe') == key }}>{{ label }}</option>
                             {% endfor %}
                         </select>
-                        <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gold text-xs">▼</div>
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-leaf text-sm">▼</div>
                     </div>
                 </div>
                 <div>
-                    <label class="block font-mystical text-xs tracking-widest text-gold uppercase mb-2">Difficulty</label>
-                    <div class="flex gap-2">
+                    <label class="block font-heading text-sm tracking-wide text-leaf mb-2">Difficulty</label>
+                    <div class="flex flex-wrap gap-2">
                         {% for level in difficulties %}
-                        <label class="flex-1 text-center bg-[#131f1b] border border-moss rounded p-2 cursor-pointer hover:border-gold has-[:checked]:border-gold has-[:checked]:text-gold font-magical text-xs">
+                        <label class="flex-1 text-center bg-[#131f1b] border border-moss rounded p-2 cursor-pointer hover:border-leaf has-[:checked]:border-leaf has-[:checked]:text-leaf font-magical text-sm">
                             <input type="radio" name="difficulty" value="{{ level }}" class="sr-only" {{ 'checked' if form.get('difficulty', 'beginner') == level }}>
                             {{ level }}
                         </label>
@@ -130,7 +130,7 @@
             </div>
 
             <div class="pt-2 text-center">
-                <button type="submit" class="btn-gold w-full">Seal Your Profile and Dig In</button>
+                <button type="submit" class="btn-leaf w-full">Seal Your Profile and Dig In</button>
             </div>
         </form>
     </div>

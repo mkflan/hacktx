@@ -12,6 +12,18 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Space+Grotesk:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 
+    <script>
+        /* Text size switch: scales the root font size, so everything (rem based) grows together. */
+        const TEXT_SIZES = { normal: "100%", large: "115%", xlarge: "130%" };
+        function applyTextSize(size) {
+            if (!TEXT_SIZES[size]) size = "normal";
+            document.documentElement.style.fontSize = TEXT_SIZES[size];
+            document.querySelectorAll("[data-text-size]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.textSize === size)));
+            try { localStorage.setItem("rabbit-text-size", size); } catch (e) {}
+        }
+        try { applyTextSize(localStorage.getItem("rabbit-text-size")); } catch (e) {}
+    </script>
+
     <style type="text/tailwindcss">
         @import "tailwindcss";
         @theme {
@@ -20,9 +32,11 @@
             --color-fuschia: #e1b6f2;
             --color-purple: #adb8d6;
             --color-blue: #b1e6f3;
-            --color-dirt: #2b1810;
+            --color-dirt: #b8956f;
             --color-grass: #5c7c65;
-            --color-gold: #d4af37;
+            --color-leaf: #74d68a;
+            --color-forest: #0f2e1b;
+            --color-ink: #2b1a10;
             --color-panel: #0d1412;
             --color-panel-2: #1a2923;
             --color-moss: #2c4238;
@@ -30,40 +44,46 @@
             --font-cursive: 'Great Vibes', cursive;
             --font-handwriting: 'Satisfy', cursive;
             --font-mystical: 'Cinzel Decorative', serif;
+            --font-heading: 'Space Grotesk', sans-serif;
             --font-magical: 'Space Grotesk', sans-serif;
         }
 
         body { background-color: #fffbf2; }
 
-        /* Netflix-style rows: hide the scrollbar but keep it scrollable */
-        .shelf { scrollbar-width: none; }
-        .shelf::-webkit-scrollbar { display: none; }
+        /* Netflix-style rows: a visible scrollbar underneath, plus the mouse wheel (see below) */
+        .shelf { scrollbar-width: thin; scrollbar-color: #74d68a #2c4238; }
+        .shelf::-webkit-scrollbar { height: 12px; }
+        .shelf::-webkit-scrollbar-track { background: #2c4238; border-radius: 6px; }
+        .shelf::-webkit-scrollbar-thumb { background: #74d68a; border-radius: 6px; }
 
-        .tag { @apply font-magical text-[10px] tracking-wide rounded-full px-2 py-0.5 border border-moss text-gray-400; }
-        .tag-gold { @apply border-gold text-gold; }
-        .btn-gold { @apply font-mystical text-xs uppercase tracking-widest font-bold bg-panel-2 border-2 border-gold text-gold rounded px-5 py-3 hover:bg-gold hover:text-panel transition-all cursor-pointer; }
-        .btn-moss { @apply font-magical text-xs font-semibold tracking-wider bg-moss text-cream rounded px-4 py-2 hover:bg-gold hover:text-dirt transition-colors cursor-pointer; }
-        .field { @apply w-full bg-[#131f1b] border border-moss text-cream font-magical text-sm px-4 py-3 rounded focus:outline-none focus:border-gold; }
+        .text-size-btn { @apply font-magical font-semibold text-slate-800 bg-cream border border-purple-300/60 rounded px-2 py-0.5 cursor-pointer hover:bg-white; }
+        .text-size-btn[aria-pressed="true"] { @apply bg-forest text-cream border-forest; }
+
+        .tag { @apply font-magical text-xs tracking-wide rounded-full px-2 py-0.5 border border-moss text-gray-400; }
+        .tag-leaf { @apply border-leaf text-leaf; }
+        .btn-leaf { @apply font-heading text-sm tracking-wide font-bold bg-panel-2 border-2 border-leaf text-leaf rounded px-5 py-3 hover:bg-leaf hover:text-panel transition-all cursor-pointer; }
+        .btn-moss { @apply font-magical text-sm font-semibold tracking-wide bg-moss text-cream rounded px-4 py-2 hover:bg-leaf hover:text-panel transition-colors cursor-pointer; }
+        .field { @apply w-full bg-[#131f1b] border border-moss text-cream font-magical text-base px-4 py-3 rounded focus:outline-none focus:border-leaf; }
     </style>
 
     {% block head %}{% endblock %}
 </head>
-<body class="font-mystical min-h-full flex flex-col text-[#1e293b]">
+<body class="font-magical min-h-full flex flex-col text-[#1e293b]">
 
     <!-- NAVBAR -->
-    <nav class="bg-purple/80 backdrop-blur sticky top-0 z-50 border-b border-purple-300/30">
+    <nav class="bg-purple sticky top-0 z-50 border-b border-purple-300/30">
         <div class="max-w-7xl mx-auto px-6 py-3 flex flex-wrap gap-3 justify-between items-center">
             <a href="/" class="flex items-center space-x-3">
                 <span>🐇</span>
-                <span class="text-lg md:text-xl text-slate-800">Research Rabbit</span>
+                <span class="font-heading font-bold text-xl md:text-2xl text-slate-900">Research Rabbit</span>
             </a>
-            <div class="flex items-center gap-4 md:gap-6 text-xs md:text-sm font-semibold tracking-wider">
-                <a href="/" class="hover:text-white transition-colors {{ 'text-white' if request.path == '/' }}">Home</a>
-                <a href="/dashboard" class="hover:text-white transition-colors {{ 'text-white' if request.path.startswith('/dashboard') or request.path.startswith('/projects') }}">The Rabbit Hole</a>
-                <a href="/chat" class="hover:text-white transition-colors {{ 'text-white' if request.path.startswith('/chat') }}">Ask the Caterpillar</a>
-                <a href="/forum" class="hover:text-white transition-colors {{ 'text-white' if request.path.startswith('/forum') }}">Wonderland</a>
+            <div class="flex items-center gap-4 md:gap-6 text-sm md:text-base font-semibold tracking-wide">
+                <a href="/" class="hover:text-forest hover:underline underline-offset-4 decoration-2 transition-colors {{ 'text-forest underline' if request.path == '/' }}">Home</a>
+                <a href="/dashboard" class="hover:text-forest hover:underline underline-offset-4 decoration-2 transition-colors {{ 'text-forest underline' if request.path.startswith('/dashboard') or request.path.startswith('/projects') }}">The Rabbit Hole</a>
+                <a href="/chat" class="hover:text-forest hover:underline underline-offset-4 decoration-2 transition-colors {{ 'text-forest underline' if request.path.startswith('/chat') }}">Ask the Caterpillar</a>
+                <a href="/forum" class="hover:text-forest hover:underline underline-offset-4 decoration-2 transition-colors {{ 'text-forest underline' if request.path.startswith('/forum') }}">Wonderland</a>
             </div>
-            <div class="flex items-center gap-2 font-magical text-xs">
+            <div class="flex items-center gap-2 font-magical text-sm">
                 {% if current_user %}
                 <form method="post" action="/session/{{ current_user.id }}" id="switchUserForm" class="flex items-center gap-2">
                     <input type="hidden" name="next" value="{{ request.path }}">
@@ -76,10 +96,16 @@
                         {% endfor %}
                     </select>
                 </form>
-                <a href="/?new=1" class="text-slate-700 hover:text-white underline-offset-2 hover:underline">New profile</a>
+                <a href="/?new=1" class="text-slate-800 hover:text-forest underline-offset-2 hover:underline">New profile</a>
                 {% else %}
                 <a href="/?new=1" class="bg-cream/90 border border-purple-300/60 rounded-full px-3 py-1 text-slate-800 hover:bg-white">Create your profile</a>
                 {% endif %}
+                <div role="group" aria-label="Text size" class="flex items-center gap-1 ml-2">
+                    <span class="text-slate-700 mr-1">Text</span>
+                    <button type="button" class="text-size-btn text-sm" data-text-size="normal" aria-pressed="true" title="Normal text">A</button>
+                    <button type="button" class="text-size-btn text-base" data-text-size="large" aria-pressed="false" title="Large text">A+</button>
+                    <button type="button" class="text-size-btn text-lg" data-text-size="xlarge" aria-pressed="false" title="Extra large text">A++</button>
+                </div>
             </div>
         </div>
     </nav>
@@ -92,9 +118,26 @@
     {% block after_main %}{% endblock %}
 
     <!-- FOOTER -->
-    <footer class="border-t border-purple-900/30 py-8 text-center text-xs text-slate-500 font-mono bg-[#fffbf2]">
+    <footer class="border-t border-purple-900/30 py-8 text-center text-sm text-slate-500 font-mono bg-[#fffbf2]">
         <p>Made with ♥ &mdash; HackTX 2026 &middot; Sources dug up live with SerpApi, plans written with Gemini</p>
     </footer>
+
+    <script>
+        document.querySelectorAll("[data-text-size]").forEach((b) => b.addEventListener("click", () => applyTextSize(b.dataset.textSize)));
+        try { applyTextSize(localStorage.getItem("rabbit-text-size")); } catch (e) { applyTextSize("normal"); }
+
+        /* Mouse wheel over a shelf scrolls it sideways; at either end the page scrolls as usual. */
+        document.querySelectorAll(".shelf").forEach((shelf) => {
+            shelf.addEventListener("wheel", (e) => {
+                if (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;  // already horizontal
+                const max = shelf.scrollWidth - shelf.clientWidth;
+                const atEnd = (e.deltaY < 0 && shelf.scrollLeft <= 0) || (e.deltaY > 0 && shelf.scrollLeft >= max - 1);
+                if (max <= 0 || atEnd) return;
+                e.preventDefault();
+                shelf.scrollLeft += e.deltaMode === 1 ? e.deltaY * 40 : e.deltaY;
+            }, { passive: false });
+        });
+    </script>
 
     {% block scripts %}{% endblock %}
 </body>

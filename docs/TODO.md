@@ -20,6 +20,9 @@ Owners: **Back** = backend (Rashmi and Viraj), **Front** = pages and templates, 
 - [x] Live checks 2026-10-25 on gemini-3.6-flash: mentor reply with 6 SerpApi results in
       project mode; starter plan in 18 s
 - [x] README, SPEC, DEMO run sheet, BACKLOG
+- [x] Readability pass 2026-10-25: Space Grotesk headings (Cinzel only on the Home banner),
+      lighter brown backdrop, green accents, matte (no shadows or blur), white clouds,
+      larger text, A / A+ / A++ text size switch, shelf scrollbar and mouse-wheel scrolling
 
 ## Before judging
 

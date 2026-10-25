@@ -16,27 +16,27 @@
 
 {% block content %}
         {% call sky(project.name, project.description, "min-h-[320px]") %}
-            <div class="flex flex-wrap justify-center gap-2 pt-2 font-magical text-xs">
+            <div class="flex flex-wrap justify-center gap-2 pt-2 font-magical text-sm">
                 {% for m in project.associated_majors %}<span class="bg-cream/90 border border-purple-300/60 rounded-full px-3 py-1 text-slate-800">{{ m }}</span>{% endfor %}
                 {% for tag in project.interests %}<span class="bg-pink/60 border border-pink rounded-full px-3 py-1 text-slate-800">{{ tag }}</span>{% endfor %}
             </div>
-            <p class="font-magical text-sm font-semibold text-slate-700 pt-1">
+            <p class="font-magical text-base font-semibold text-slate-700 pt-1">
                 {{ project.difficulty or "difficulty unknown" }} &middot; {{ timeframe }}{% if hours %} &middot; about {{ hours|hours }} hours{% endif %}
             </p>
         {% endcall %}
 
-        <section class="relative w-full bg-dirt px-4 pt-14 pb-32 border-t-4 border-[#180e0a] min-h-[600px]">
+        <section class="relative w-full bg-dirt px-4 pt-14 pb-32 border-t-4 border-[#8a6a4b] min-h-[600px]">
             <div class="relative max-w-6xl mx-auto z-20 text-cream">
 
                 <!-- ACTIONS -->
                 <div class="flex flex-wrap gap-3 mb-10">
-                    <a href="/chat?project={{ project.id }}" class="btn-gold">🐛 Ask the Caterpillar about this project</a>
+                    <a href="/chat?project={{ project.id }}" class="btn-leaf">🐛 Ask the Caterpillar about this project</a>
                     {% if user %}
                     <button type="button" id="personalizeBtn" class="btn-moss">✨ Make it mine (Gemini plan for {{ user.username }})</button>
                     {% else %}
                     <a href="/?new=1" class="btn-moss">Create a profile to personalize this plan</a>
                     {% endif %}
-                    <a href="/dashboard" class="font-magical text-xs text-gray-400 self-center hover:text-gold">← back to the shelves</a>
+                    <a href="/dashboard" class="font-magical text-base font-semibold text-ink self-center hover:text-forest hover:underline">← back to the shelves</a>
                 </div>
 
                 <div id="planPanel" class="hidden mb-10"></div>
@@ -45,22 +45,22 @@
                     <!-- LEFT: outline and materials -->
                     <div class="lg:col-span-3 space-y-8">
                         <article class="bg-panel border-2 border-moss rounded-md p-6">
-                            <h2 class="font-mystical text-sm md:text-base text-gold uppercase tracking-wider font-bold mb-4">Getting started</h2>
+                            <h2 class="font-heading text-base md:text-lg text-leaf tracking-wide font-bold mb-4">Getting started</h2>
                             {% if steps %}
-                            <ol class="font-magical text-sm text-gray-200 space-y-3 list-decimal pl-5 marker:text-gold">
+                            <ol class="font-magical text-base text-gray-200 space-y-3 list-decimal pl-5 marker:text-leaf">
                                 {% for step in steps %}<li>{{ step }}</li>{% endfor %}
                             </ol>
                             {% else %}
-                            <p class="font-magical text-sm text-gray-400">No outline recorded for this project yet. Ask the Caterpillar for a plan.</p>
+                            <p class="font-magical text-base text-gray-400">No outline recorded for this project yet. Ask the Caterpillar for a plan.</p>
                             {% endif %}
                         </article>
 
                         <article class="bg-panel border-2 border-moss rounded-md p-6">
-                            <h2 class="font-mystical text-sm md:text-base text-gold uppercase tracking-wider font-bold mb-1">Materials and where to get them</h2>
-                            <p class="font-magical text-[11px] text-gray-500 mb-4">Estimated costs are the team's; store links and prices are live search results (SerpApi Google Shopping), never guessed.</p>
+                            <h2 class="font-heading text-base md:text-lg text-leaf tracking-wide font-bold mb-1">Materials and where to get them</h2>
+                            <p class="font-magical text-xs text-gray-400 mb-4">Estimated costs are the team's; store links and prices are live search results (SerpApi Google Shopping), never guessed.</p>
                             {% if materials %}
-                            <table class="w-full font-magical text-xs text-gray-200">
-                                <thead class="text-gold text-left">
+                            <table class="w-full font-magical text-sm text-gray-200">
+                                <thead class="text-leaf text-left">
                                     <tr><th class="py-1 pr-2">Item</th><th class="py-1 pr-2">Qty</th><th class="py-1 pr-2">Why</th><th class="py-1 pr-2 text-right">Est.</th><th class="py-1 text-right">Buy</th></tr>
                                 </thead>
                                 <tbody>
@@ -72,15 +72,15 @@
                                         <td class="py-2 pr-2 text-right whitespace-nowrap">{% if m.estimated_cost_usd is not none %}${{ m.estimated_cost_usd|hours }}{% endif %}</td>
                                         <td class="py-2 text-right whitespace-nowrap">
                                             {% if m.shop_url %}
-                                            <a href="{{ m.shop_url }}" target="_blank" rel="noopener" class="text-gold hover:underline">{{ m.shop_source or "shop" }}{% if m.price_usd is not none %} ${{ m.price_usd|hours }}{% endif %}</a>
-                                            {% else %}<span class="text-gray-600">not looked up</span>{% endif %}
+                                            <a href="{{ m.shop_url }}" target="_blank" rel="noopener" class="text-leaf hover:underline">{{ m.shop_source or "shop" }}{% if m.price_usd is not none %} ${{ m.price_usd|hours }}{% endif %}</a>
+                                            {% else %}<span class="text-gray-400">not looked up</span>{% endif %}
                                         </td>
                                     </tr>
                                 {% endfor %}
                                 </tbody>
                             </table>
                             {% else %}
-                            <p class="font-magical text-sm text-gray-400">Nothing to buy: a laptop is enough.</p>
+                            <p class="font-magical text-base text-gray-400">Nothing to buy: a laptop is enough.</p>
                             {% endif %}
                         </article>
                     </div>
@@ -89,39 +89,39 @@
                     <div class="lg:col-span-2 space-y-6">
                         {% for group in resource_groups %}
                         <article class="bg-panel border-2 border-moss rounded-md p-5">
-                            <h2 class="font-mystical text-xs md:text-sm text-gold uppercase tracking-wider font-bold mb-3">{{ group.label }}</h2>
+                            <h2 class="font-heading text-sm md:text-base text-leaf tracking-wide font-bold mb-3">{{ group.label }}</h2>
                             <ul class="space-y-3">
                                 {% for r in group.resources %}
-                                <li class="font-magical text-xs text-gray-200">
+                                <li class="font-magical text-sm text-gray-200">
                                     {% if r.url %}
                                     <a href="{{ r.url }}" target="_blank" rel="noopener" class="flex gap-3 group">
                                         {% if r.thumbnail_url %}<img src="{{ r.thumbnail_url }}" alt="" class="w-20 h-12 object-cover rounded border border-moss shrink-0">{% endif %}
                                         <span>
-                                            <span class="text-cream group-hover:text-gold">{{ r.title }}</span>
-                                            <span class="block text-[10px] text-gray-500">{{ r.provider or "" }}{% for key in ("channel", "year", "authors") %}{% if r.metadata.get(key) %} &middot; {{ r.metadata.get(key) }}{% endif %}{% endfor %}</span>
+                                            <span class="text-cream group-hover:text-leaf">{{ r.title }}</span>
+                                            <span class="block text-xs text-gray-400">{{ r.provider or "" }}{% for key in ("channel", "year", "authors") %}{% if r.metadata.get(key) %} &middot; {{ r.metadata.get(key) }}{% endif %}{% endfor %}</span>
                                         </span>
                                     </a>
                                     {% else %}
                                     <p class="text-cream font-semibold">{{ r.title }}</p>
                                     {% if r.content_excerpt %}<p class="text-gray-300 mt-1 leading-relaxed">{{ r.content_excerpt }}</p>{% endif %}
                                     {% endif %}
-                                    {% if r.source != "authored" %}<span class="block text-[10px] text-gray-600 mt-0.5">found via {{ r.source|replace("serpapi:", "SerpApi ") }}</span>{% endif %}
+                                    {% if r.source != "authored" %}<span class="block text-xs text-gray-400 mt-0.5">found via {{ r.source|replace("serpapi:", "SerpApi ") }}</span>{% endif %}
                                 </li>
                                 {% endfor %}
                             </ul>
                         </article>
                         {% else %}
-                        <article class="bg-panel border-2 border-moss rounded-md p-5 font-magical text-sm text-gray-400">No resources recorded for this project yet.</article>
+                        <article class="bg-panel border-2 border-moss rounded-md p-5 font-magical text-base text-gray-400">No resources recorded for this project yet.</article>
                         {% endfor %}
 
                         <article class="bg-panel border-2 border-moss rounded-md p-5">
-                            <h2 class="font-mystical text-xs md:text-sm text-gold uppercase tracking-wider font-bold mb-2">Dig deeper</h2>
-                            <p class="font-magical text-[11px] text-gray-500 mb-3">Find more tutorials and papers for this project with a live SerpApi search.</p>
+                            <h2 class="font-heading text-sm md:text-base text-leaf tracking-wide font-bold mb-2">Dig deeper</h2>
+                            <p class="font-magical text-xs text-gray-400 mb-3">Find more tutorials and papers for this project with a live SerpApi search.</p>
                             <button type="button" id="digBtn" class="btn-moss w-full" {{ '' if serpapi_enabled else 'disabled title="SERPAPI_API_KEY is not set on the server"' }}>🔎 Dig deeper{{ '' if serpapi_enabled else ' (web search unavailable)' }}</button>
                             <div id="digResults" class="mt-3 space-y-2"></div>
                         </article>
 
-                        <p class="font-magical text-[10px] text-gray-600">Links are supplied by the team or by search engines and are not verified. Data source: {{ data_source }}.</p>
+                        <p class="font-magical text-sm text-ink">Links are supplied by the team or by search engines and are not verified. Data source: {{ data_source }}.</p>
                     </div>
                 </div>
             </div>
@@ -134,40 +134,40 @@ const PROJECT_ID = {{ project.id|tojson }};
 const USER_ID = {{ (user.id if user else none)|tojson }};
 
 function esc(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
-function list(items, f) { return items && items.length ? "<ul class='list-disc pl-5 space-y-1'>" + items.map(f).join("") + "</ul>" : "<p class='text-gray-500'>none</p>"; }
+function list(items, f) { return items && items.length ? "<ul class='list-disc pl-5 space-y-1'>" + items.map(f).join("") + "</ul>" : "<p class='text-gray-400'>none</p>"; }
 
 async function personalize() {
     const btn = document.getElementById("personalizeBtn");
     const panel = document.getElementById("planPanel");
     btn.disabled = true; btn.textContent = "Asking Gemini… (10-30 s)";
     panel.classList.remove("hidden");
-    panel.innerHTML = "<div class='bg-panel border-2 border-moss rounded-md p-6 font-magical text-sm text-gray-300'>Writing a plan tailored to you…</div>";
+    panel.innerHTML = "<div class='bg-panel border-2 border-moss rounded-md p-6 font-magical text-base text-gray-300'>Writing a plan tailored to you…</div>";
     try {
         const res = await fetch(`/api/users/${USER_ID}/projects/${PROJECT_ID}/personalize`, {method: "POST", headers: {"Content-Type": "application/json"}, body: "{}"});
         const body = await res.json();
         if (!res.ok) throw new Error(body.error ? body.error.message : res.statusText);
         const p = body.project;
         panel.innerHTML = `
-          <article class="bg-panel border-2 border-gold rounded-md p-6 font-magical text-sm text-gray-200 space-y-4">
+          <article class="bg-panel border-2 border-leaf rounded-md p-6 font-magical text-base text-gray-200 space-y-4">
             <div class="flex items-start justify-between gap-3">
-              <h2 class="font-mystical text-sm md:text-base text-gold uppercase tracking-wider font-bold">${esc(p.name)}</h2>
-              <span class="text-[10px] text-gray-500">${esc(body.generation_mode)} &middot; ${p.estimated_total_hours} h</span>
+              <h2 class="font-heading text-base md:text-lg text-leaf tracking-wide font-bold">${esc(p.name)}</h2>
+              <span class="text-xs text-gray-400">${esc(body.generation_mode)} &middot; ${p.estimated_total_hours} h</span>
             </div>
             <p>${esc(p.summary)}</p>
-            <p><span class="text-gold">Deliverable:</span> ${esc(p.deliverable)}</p>
-            <p><span class="text-gold">First action:</span> ${esc(p.first_action)}</p>
-            <div><h3 class="text-gold uppercase text-xs tracking-wider mb-1">Milestones</h3>
-              <ol class="list-decimal pl-5 space-y-2">${p.milestones.map(m => `<li><span class="text-cream font-semibold">${esc(m.title)}</span> <span class="text-gray-500">(${m.estimated_hours} h)</span><br>${esc(m.objective)}</li>`).join("")}</ol></div>
+            <p><span class="text-leaf">Deliverable:</span> ${esc(p.deliverable)}</p>
+            <p><span class="text-leaf">First action:</span> ${esc(p.first_action)}</p>
+            <div><h3 class="text-leaf text-sm tracking-wide mb-1">Milestones</h3>
+              <ol class="list-decimal pl-5 space-y-2">${p.milestones.map(m => `<li><span class="text-cream font-semibold">${esc(m.title)}</span> <span class="text-gray-400">(${m.estimated_hours} h)</span><br>${esc(m.objective)}</li>`).join("")}</ol></div>
             <div class="grid md:grid-cols-2 gap-4">
-              <div><h3 class="text-gold uppercase text-xs tracking-wider mb-1">Materials</h3>${list(p.materials, m => `<li>${esc(m.name)}${m.estimated_cost_usd != null ? ` <span class='text-gray-500'>~$${m.estimated_cost_usd}</span>` : ""}</li>`)}</div>
-              <div><h3 class="text-gold uppercase text-xs tracking-wider mb-1">Customize it</h3>${list(p.customization_ideas, c => `<li>${esc(c)}</li>`)}</div>
+              <div><h3 class="text-leaf text-sm tracking-wide mb-1">Materials</h3>${list(p.materials, m => `<li>${esc(m.name)}${m.estimated_cost_usd != null ? ` <span class='text-gray-400'>~$${m.estimated_cost_usd}</span>` : ""}</li>`)}</div>
+              <div><h3 class="text-leaf text-sm tracking-wide mb-1">Customize it</h3>${list(p.customization_ideas, c => `<li>${esc(c)}</li>`)}</div>
             </div>
-            ${p.scope_adjustments.length ? `<div><h3 class="text-gold uppercase text-xs tracking-wider mb-1">Scope changes for your time</h3>${list(p.scope_adjustments, s => `<li>${esc(s)}</li>`)}</div>` : ""}
-            ${p.assumptions.length ? `<details class="text-xs text-gray-500"><summary class="cursor-pointer">Assumptions and notes</summary>${list(p.assumptions, a => `<li>${esc(a)}</li>`)}${list((body.warnings||[]).map(w => w.message), w => `<li>${esc(w)}</li>`)}</details>` : ""}
+            ${p.scope_adjustments.length ? `<div><h3 class="text-leaf text-sm tracking-wide mb-1">Scope changes for your time</h3>${list(p.scope_adjustments, s => `<li>${esc(s)}</li>`)}</div>` : ""}
+            ${p.assumptions.length ? `<details class="text-sm text-gray-400"><summary class="cursor-pointer">Assumptions and notes</summary>${list(p.assumptions, a => `<li>${esc(a)}</li>`)}${list((body.warnings||[]).map(w => w.message), w => `<li>${esc(w)}</li>`)}</details>` : ""}
           </article>`;
         btn.textContent = "✨ Plan written (click to refresh)";
     } catch (err) {
-        panel.innerHTML = `<div class='bg-panel border-2 border-pink rounded-md p-6 font-magical text-sm text-pink'>Could not write the plan: ${esc(err.message)}</div>`;
+        panel.innerHTML = `<div class='bg-panel border-2 border-pink rounded-md p-6 font-magical text-base text-pink'>Could not write the plan: ${esc(err.message)}</div>`;
         btn.textContent = "✨ Try again";
     } finally { btn.disabled = false; }
 }
@@ -183,13 +183,13 @@ async function dig() {
         if (!res.ok) throw new Error(body.error ? body.error.message : res.statusText);
         const items = body.results || [];
         out.innerHTML = items.length ? items.map(r => `
-          <a href="${esc(r.url)}" target="_blank" rel="noopener" class="flex gap-3 font-magical text-xs text-gray-200 hover:text-gold">
+          <a href="${esc(r.url)}" target="_blank" rel="noopener" class="flex gap-3 font-magical text-sm text-gray-200 hover:text-leaf">
             ${r.thumbnail_url ? `<img src="${esc(r.thumbnail_url)}" alt="" class="w-20 h-12 object-cover rounded border border-moss shrink-0">` : ""}
-            <span>${esc(r.title)}<span class="block text-[10px] text-gray-500">${esc(r.provider || "")}${r.metadata && r.metadata.channel ? " · " + esc(r.metadata.channel) : ""} · found via ${esc(r.source)}</span></span>
-          </a>`).join("") : "<p class='font-magical text-xs text-gray-500'>Nothing new found.</p>";
+            <span>${esc(r.title)}<span class="block text-xs text-gray-400">${esc(r.provider || "")}${r.metadata && r.metadata.channel ? " · " + esc(r.metadata.channel) : ""} · found via ${esc(r.source)}</span></span>
+          </a>`).join("") : "<p class='font-magical text-sm text-gray-400'>Nothing new found.</p>";
         btn.textContent = `🔎 Dug up ${items.length} more${body.cache_hit ? " (cached)" : ""}`;
     } catch (err) {
-        out.innerHTML = `<p class='font-magical text-xs text-pink'>${esc(err.message)}</p>`;
+        out.innerHTML = `<p class='font-magical text-sm text-pink'>${esc(err.message)}</p>`;
         btn.textContent = "🔎 Dig deeper";
     } finally { btn.disabled = false; }
 }

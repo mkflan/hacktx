@@ -13,27 +13,27 @@
 {% block content %}
         {% if project %}
         {% call sky("Ask the Caterpillar", "About " ~ project.name ~ ". I know the outline, the materials and the sources.", "min-h-[260px]") %}
-            <a href="/projects/{{ project.id }}" class="font-magical text-xs text-slate-700 underline underline-offset-2">← back to the project page</a>
+            <a href="/projects/{{ project.id }}" class="font-magical text-sm text-slate-700 underline underline-offset-2">← back to the project page</a>
         {% endcall %}
         {% else %}
         {% call sky("Ask the Caterpillar", "Pitch an idea, or ask for one. We will shape it into a project you can finish, then write the full starter.", "min-h-[260px]") %}
         {% endcall %}
         {% endif %}
 
-        <section class="relative w-full bg-dirt px-4 pt-14 pb-32 border-t-4 border-[#180e0a] min-h-[600px]">
+        <section class="relative w-full bg-dirt px-4 pt-14 pb-32 border-t-4 border-[#8a6a4b] min-h-[600px]">
             <div class="relative max-w-6xl mx-auto z-20 text-cream grid grid-cols-1 lg:grid-cols-3 gap-6">
 
                 <!-- CONVERSATION -->
                 <div class="lg:col-span-2 bg-panel border-2 border-moss rounded-md flex flex-col min-h-[560px]">
-                    <div id="messages" class="flex-grow p-5 space-y-4 overflow-y-auto max-h-[70vh] font-magical text-sm"></div>
+                    <div id="messages" class="flex-grow p-5 space-y-4 overflow-y-auto max-h-[70vh] font-magical text-base"></div>
                     <form id="chatForm" class="border-t border-moss p-4 space-y-3">
                         <textarea id="chatInput" rows="3" maxlength="4000" required
                                   placeholder="{{ 'Where are you stuck, or what do you want to try next?' if project else 'Describe the project you have in mind, or what you wish existed.' }}"
                                   class="field"></textarea>
                         <div class="flex flex-wrap items-center gap-3">
-                            <button type="submit" id="sendBtn" class="btn-gold">Ask</button>
-                            <label class="flex items-center gap-2 font-magical text-xs text-gray-300 {{ '' if serpapi_enabled else 'opacity-60' }}" title="{{ 'Runs a live SerpApi search (YouTube + web) and lets the Caterpillar cite the results' if serpapi_enabled else 'SERPAPI_API_KEY is not set on the server' }}">
-                                <input type="checkbox" id="digToggle" class="accent-[#d4af37]" {{ '' if serpapi_enabled else 'disabled' }}>
+                            <button type="submit" id="sendBtn" class="btn-leaf">Ask</button>
+                            <label class="flex items-center gap-2 font-magical text-sm text-gray-300 {{ '' if serpapi_enabled else 'opacity-60' }}" title="{{ 'Runs a live SerpApi search (YouTube + web) and lets the Caterpillar cite the results' if serpapi_enabled else 'SERPAPI_API_KEY is not set on the server' }}">
+                                <input type="checkbox" id="digToggle" class="accent-[#74d68a]" {{ '' if serpapi_enabled else 'disabled' }}>
                                 🔎 Dig deeper on the web{{ '' if serpapi_enabled else ' (unavailable)' }}
                             </label>
                             {% if not project %}
@@ -45,33 +45,33 @@
 
                 <!-- SIDEBAR -->
                 <aside class="space-y-4">
-                    <div class="bg-panel border-2 border-moss rounded-md p-5 font-magical text-xs text-gray-300">
-                        <p class="font-mystical text-xs text-gold uppercase tracking-wider font-bold mb-2">Talking as</p>
+                    <div class="bg-panel border-2 border-moss rounded-md p-5 font-magical text-sm text-gray-300">
+                        <p class="font-heading text-sm text-leaf tracking-wide font-bold mb-2">Talking as</p>
                         <p class="text-cream">{{ user.username }}</p>
                         <p class="text-gray-400">{{ user.major }} &middot; {{ user.time_commitment.raw or "time unknown" }} &middot; {{ user.skill_level or "any difficulty" }}</p>
-                        <p class="text-gray-500 mt-1">{{ user.interests|join(", ") }}</p>
+                        <p class="text-gray-400 mt-1">{{ user.interests|join(", ") }}</p>
                     </div>
                     {% if project %}
-                    <div class="bg-panel border-2 border-moss rounded-md p-5 font-magical text-xs text-gray-300">
-                        <p class="font-mystical text-xs text-gold uppercase tracking-wider font-bold mb-2">The Caterpillar knows</p>
+                    <div class="bg-panel border-2 border-moss rounded-md p-5 font-magical text-sm text-gray-300">
+                        <p class="font-heading text-sm text-leaf tracking-wide font-bold mb-2">The Caterpillar knows</p>
                         <p class="text-cream mb-1">{{ project.name }}</p>
                         <p class="text-gray-400 mb-2">{{ project.difficulty or "difficulty unknown" }} &middot; {{ project.timeline|timeframe }}</p>
-                        <p class="text-gray-500">{{ project.resources|length }} source{{ '' if project.resources|length == 1 else 's' }}, {{ project.materials|length }} material{{ '' if project.materials|length == 1 else 's' }}, {{ (project.getting_started or '').splitlines()|length }} outline steps.</p>
+                        <p class="text-gray-400">{{ project.resources|length }} source{{ '' if project.resources|length == 1 else 's' }}, {{ project.materials|length }} material{{ '' if project.materials|length == 1 else 's' }}, {{ (project.getting_started or '').splitlines()|length }} outline steps.</p>
                         <ul class="mt-3 space-y-1">
                             {% for r in project.resources[:6] %}
-                            <li>{% if r.url %}<a href="{{ r.url }}" target="_blank" rel="noopener" class="text-gold hover:underline">{{ r.title }}</a>{% else %}<span class="text-gray-200">{{ r.title }}</span>{% endif %}</li>
+                            <li>{% if r.url %}<a href="{{ r.url }}" target="_blank" rel="noopener" class="text-leaf hover:underline">{{ r.title }}</a>{% else %}<span class="text-gray-200">{{ r.title }}</span>{% endif %}</li>
                             {% endfor %}
                         </ul>
                     </div>
                     {% else %}
-                    <div class="bg-panel border-2 border-moss rounded-md p-5 font-magical text-xs text-gray-300 space-y-2">
-                        <p class="font-mystical text-xs text-gold uppercase tracking-wider font-bold">How this works</p>
+                    <div class="bg-panel border-2 border-moss rounded-md p-5 font-magical text-sm text-gray-300 space-y-2">
+                        <p class="font-heading text-sm text-leaf tracking-wide font-bold">How this works</p>
                         <p>1. Pitch your idea in a sentence or two.</p>
                         <p>2. The Caterpillar asks what matters and proposes a scope that fits your time.</p>
                         <p>3. Press <span class="text-cream">Turn into a project starter</span>: SerpApi finds real tutorials and papers, Gemini writes the plan, and you can post it to Wonderland.</p>
                     </div>
                     {% endif %}
-                    <p class="font-magical text-[10px] text-gray-600">The mentor can only link to sources it was given (the project's resources or live search results). Anything else is removed before you see it.</p>
+                    <p class="font-magical text-sm text-ink">The mentor can only link to sources it was given (the project's resources or live search results). Anything else is removed before you see it.</p>
                 </aside>
             </div>
 
@@ -97,8 +97,8 @@ function bubble(role, html, extra = "") {
     const mine = role === "user";
     const el = document.createElement("div");
     el.className = mine ? "flex justify-end" : "flex justify-start";
-    el.innerHTML = `<div class="max-w-[85%] rounded-md px-4 py-3 ${mine ? "bg-panel-2 border border-gold/60 text-cream" : "bg-[#131f1b] border border-moss text-gray-200"} space-y-2">
-        <p class="text-[10px] uppercase tracking-wider ${mine ? "text-gold" : "text-gray-500"}">${mine ? "You" : "🐛 The Caterpillar"}</p>${html}${extra}</div>`;
+    el.innerHTML = `<div class="max-w-[85%] rounded-md px-4 py-3 ${mine ? "bg-panel-2 border border-leaf/60 text-cream" : "bg-[#131f1b] border border-moss text-gray-200"} space-y-2">
+        <p class="text-xs tracking-wide ${mine ? "text-leaf" : "text-gray-400"}">${mine ? "You" : "🐛 The Caterpillar"}</p>${html}${extra}</div>`;
     box.appendChild(el);
     box.scrollTop = box.scrollHeight;
     return el;
@@ -111,7 +111,7 @@ bubble("assistant", `<p>${PROJECT
 async function send(text) {
     messages.push({ role: "user", content: text });
     bubble("user", `<p>${esc(text)}</p>`);
-    const thinking = bubble("assistant", `<p class="text-gray-500">thinking…</p>`);
+    const thinking = bubble("assistant", `<p class="text-gray-400">thinking…</p>`);
     sendBtn.disabled = true;
     try {
         const res = await fetch(`/api/users/${USER_ID}/assistant`, {
@@ -125,8 +125,8 @@ async function send(text) {
         thinking.remove();
         bubble("assistant", renderMarkdown(body.reply),
             renderSources(body.web_results, "Dug up live with SerpApi") +
-            (notes.length ? `<p class="text-[10px] text-gray-500">${notes.map(esc).join(" ")}</p>` : "") +
-            `<p class="text-[10px] text-gray-600">${esc(body.generation_mode)}${body.model ? " · " + esc(body.model) : ""}</p>`);
+            (notes.length ? `<p class="text-xs text-gray-400">${notes.map(esc).join(" ")}</p>` : "") +
+            `<p class="text-xs text-gray-400">${esc(body.generation_mode)}${body.model ? " · " + esc(body.model) : ""}</p>`);
         if (starterBtn && messages.filter(m => m.role === "user").length >= 1) starterBtn.classList.remove("hidden");
     } catch (err) {
         thinking.remove();
@@ -144,7 +144,7 @@ async function makeStarter() {
     if (!firstPitch) return;
     starterBtn.disabled = true; starterBtn.textContent = "✨ Writing the starter… (15-40 s)";
     panel.classList.remove("hidden");
-    panel.innerHTML = "<div class='bg-panel border-2 border-moss rounded-md p-6 font-magical text-sm text-gray-300'>Digging up sources with SerpApi and writing the plan with Gemini…</div>";
+    panel.innerHTML = "<div class='bg-panel border-2 border-moss rounded-md p-6 font-magical text-base text-gray-300'>Digging up sources with SerpApi and writing the plan with Gemini…</div>";
     try {
         const res = await fetch(`/api/users/${USER_ID}/starter`, {
             method: "POST", headers: { "Content-Type": "application/json" },
@@ -155,10 +155,10 @@ async function makeStarter() {
         starterPlan = body;
         panel.innerHTML = `
           <div class="flex flex-wrap items-center gap-3 mb-4">
-            <h2 class="font-mystical text-sm md:text-base text-gold uppercase tracking-wider font-bold">Your project starter</h2>
+            <h2 class="font-heading text-xl md:text-2xl text-forest font-bold">Your project starter</h2>
             <form method="post" action="/forum/starters" class="ml-auto flex items-center gap-2">
               <input type="hidden" name="plan_json" id="planJson">
-              <button type="submit" class="btn-gold">📜 Post to Wonderland</button>
+              <button type="submit" class="btn-leaf">📜 Post to Wonderland</button>
             </form>
           </div>
           ${renderPlan(body.project, body)}
@@ -167,7 +167,7 @@ async function makeStarter() {
         starterBtn.textContent = "✨ Rewrite the starter";
         panel.scrollIntoView({ behavior: "smooth" });
     } catch (err) {
-        panel.innerHTML = `<div class='bg-panel border-2 border-pink rounded-md p-6 font-magical text-sm text-pink'>Could not write the starter: ${esc(err.message)}</div>`;
+        panel.innerHTML = `<div class='bg-panel border-2 border-pink rounded-md p-6 font-magical text-base text-pink'>Could not write the starter: ${esc(err.message)}</div>`;
         starterBtn.textContent = "✨ Try again";
     } finally { starterBtn.disabled = false; }
 }

@@ -15,10 +15,10 @@
 
 {% block content %}
         {% call sky("Wonderland", "Project starters from the community, and the questions people are stuck on. Pick one up, or post your own.", "min-h-[320px]") %}
-            <a href="/chat" class="btn-gold mt-2">🐛 Make a starter with the Caterpillar</a>
+            <a href="/chat" class="btn-leaf mt-2">🐛 Make a starter with the Caterpillar</a>
         {% endcall %}
 
-        <section class="relative w-full bg-dirt px-4 pt-4 pb-32 border-t-4 border-[#180e0a] min-h-[500px]">
+        <section class="relative w-full bg-dirt px-4 pt-4 pb-32 border-t-4 border-[#8a6a4b] min-h-[500px]">
             <svg class="absolute top-0 left-0 w-full h-32 pointer-events-none opacity-40 z-10" viewBox="0 0 1200 100" preserveAspectRatio="none">
                 <path d="M100,0 Q120,40 150,80 T200,100" fill="none" stroke="#5c3a21" stroke-width="4" />
                 <path d="M400,0 Q380,50 350,90" fill="none" stroke="#5c3a21" stroke-width="3" />
@@ -29,11 +29,11 @@
             <div class="relative max-w-4xl mx-auto z-20 text-cream pt-12">
 
                 {% if error %}
-                <p role="alert" class="font-magical text-sm text-pink border border-pink rounded px-4 py-2 mb-6 text-center">{{ error }}</p>
+                <p role="alert" class="font-magical text-base text-pink bg-panel border-2 border-pink rounded px-4 py-2 mb-6 text-center">{{ error }}</p>
                 {% endif %}
 
                 <!-- SEARCH AND SORT -->
-                <form method="get" action="/forum" class="bg-panel border-2 border-moss rounded-md p-4 mb-8 grid grid-cols-1 md:grid-cols-12 gap-3 font-magical text-xs">
+                <form method="get" action="/forum" class="bg-panel border-2 border-moss rounded-md p-4 mb-8 grid grid-cols-1 md:grid-cols-12 gap-3 font-magical text-sm">
                     <input type="search" name="q" value="{{ filters.q }}" placeholder="Search starters: sensors, biology, beginner, a username…" aria-label="Search"
                            class="md:col-span-5 bg-panel-2 text-cream border border-moss rounded px-3 py-2">
                     <select name="kind" aria-label="Kind" class="md:col-span-2 bg-panel-2 text-cream border border-moss rounded px-2 py-2">
@@ -54,20 +54,20 @@
                 </form>
 
                 <!-- POSTS -->
-                <p class="font-magical text-[11px] text-gray-500 mb-3">{{ posts|length }} post{{ '' if posts|length == 1 else 's' }}{% if filters.q %} matching "{{ filters.q }}"{% endif %}</p>
+                <p class="font-magical text-base font-semibold text-ink mb-3">{{ posts|length }} post{{ '' if posts|length == 1 else 's' }}{% if filters.q %} matching "{{ filters.q }}"{% endif %}</p>
                 {% for post in posts %}
-                <article id="post-{{ post.id }}" class="bg-panel border-2 {{ 'border-gold/60' if post.kind == 'starter' else 'border-moss' }} rounded-md p-6 mb-6 shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
+                <article id="post-{{ post.id }}" class="bg-panel border-2 {{ 'border-leaf/60' if post.kind == 'starter' else 'border-moss' }} rounded-md p-6 mb-6">
                     <div class="flex flex-wrap items-center gap-2 mb-2">
-                        {% if post.kind == "starter" %}<span class="font-magical text-[10px] uppercase tracking-wider bg-gold text-dirt rounded px-2 py-0.5 font-bold">Project starter</span>{% endif %}
+                        {% if post.kind == "starter" %}<span class="font-magical text-xs tracking-wide bg-leaf text-panel rounded px-2 py-0.5 font-bold">Project starter</span>{% endif %}
                         {% if post.difficulty %}{{ difficulty_badge(post.difficulty) }}{% endif %}
-                        {% if post.estimated_hours %}<span class="font-magical text-[10px] text-gray-400">{{ post.estimated_hours|hours }} h</span>{% endif %}
+                        {% if post.estimated_hours %}<span class="font-magical text-xs text-gray-400">{{ post.estimated_hours|hours }} h</span>{% endif %}
                     </div>
-                    <h3 class="font-mystical text-sm md:text-base text-gold uppercase tracking-wider font-bold mb-1">
+                    <h3 class="font-heading text-base md:text-lg text-leaf tracking-wide font-bold mb-1">
                         {% if post.kind == "starter" %}<a href="/forum/posts/{{ post.id }}" class="hover:underline">{{ post.title }}</a>{% else %}{{ post.title }}{% endif %}
                     </h3>
-                    <p class="font-magical text-[11px] text-gray-400 mb-3">
+                    <p class="font-magical text-xs text-gray-400 mb-3">
                         {{ post.author }} &middot; {{ post.author_major }} &middot; {{ post.created_at }}
-                        {% if post.project_name %}&middot; about <a href="/projects/{{ post.project_id }}" class="text-gold hover:underline">{{ post.project_name }}</a>{% endif %}
+                        {% if post.project_name %}&middot; about <a href="/projects/{{ post.project_id }}" class="text-leaf hover:underline">{{ post.project_name }}</a>{% endif %}
                     </p>
                     {% if post.majors or post.interests %}
                     <div class="flex flex-wrap gap-1 mb-3">
@@ -75,7 +75,7 @@
                         {% for tag in post.interests[:6] %}<span class="tag">{{ tag }}</span>{% endfor %}
                     </div>
                     {% endif %}
-                    <p class="font-magical text-sm text-gray-200 leading-relaxed whitespace-pre-line mb-4">{{ post.body }}</p>
+                    <p class="font-magical text-base text-gray-200 leading-relaxed whitespace-pre-line mb-4">{{ post.body }}</p>
                     {% if post.kind == "starter" %}
                     <a href="/forum/posts/{{ post.id }}" class="btn-moss inline-block mb-4">Open the full starter: milestones, materials, sources →</a>
                     {% endif %}
@@ -83,16 +83,16 @@
                     {% if post.comments %}
                     <ul class="space-y-3 border-t border-moss pt-4 mb-4">
                         {% for c in post.comments %}
-                        <li class="font-magical text-xs text-gray-300">
-                            <span class="text-gold">{{ c.author }}</span>
-                            <span class="text-gray-500">&middot; {{ c.created_at }}</span>
+                        <li class="font-magical text-sm text-gray-300">
+                            <span class="text-leaf">{{ c.author }}</span>
+                            <span class="text-gray-400">&middot; {{ c.created_at }}</span>
                             <p class="whitespace-pre-line mt-1">{{ c.body }}</p>
                         </li>
                         {% endfor %}
                     </ul>
                     {% endif %}
 
-                    <form method="post" action="/forum/posts/{{ post.id }}/comments" class="flex flex-col sm:flex-row gap-2 font-magical text-xs">
+                    <form method="post" action="/forum/posts/{{ post.id }}/comments" class="flex flex-col sm:flex-row gap-2 font-magical text-sm">
                         <select name="user_id" required aria-label="Comment as" class="bg-panel-2 text-cream border border-moss rounded px-2 py-2">
                             <option value="" disabled {{ '' if current_user else 'selected' }}>Comment as</option>
                             {% for u in users %}<option value="{{ u.id }}" {{ 'selected' if current_user and u.id|string == current_user.id }}>{{ u.username }}</option>{% endfor %}
@@ -103,18 +103,18 @@
                     </form>
                 </article>
                 {% else %}
-                <div class="bg-panel border-2 border-moss rounded-md p-8 text-center font-magical text-sm text-gray-300 mb-6">
-                    Nothing here yet{% if filters.q or filters.kind or filters.difficulty %} for these filters. <a href="/forum" class="text-gold hover:underline">Clear them</a>{% endif %}.
+                <div class="bg-panel border-2 border-moss rounded-md p-8 text-center font-magical text-base text-gray-300 mb-6">
+                    Nothing here yet{% if filters.q or filters.kind or filters.difficulty %} for these filters. <a href="/forum" class="text-leaf hover:underline">Clear them</a>{% endif %}.
                 </div>
                 {% endfor %}
 
                 <!-- SUBMIT A DISCUSSION -->
-                <form method="post" action="/forum/posts" class="bg-panel border-2 border-moss rounded-md p-6 mt-10 space-y-4 shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
-                    <h2 class="font-mystical text-lg text-gold uppercase tracking-wider font-bold">Ask Wonderland</h2>
-                    <p class="font-magical text-xs text-gray-400">Stuck on a project, or looking for a teammate? Post it here. Full project starters come from the <a href="/chat" class="text-gold hover:underline">Caterpillar</a>.</p>
+                <form method="post" action="/forum/posts" class="bg-panel border-2 border-moss rounded-md p-6 mt-10 space-y-4">
+                    <h2 class="font-heading text-xl text-leaf tracking-wide font-bold">Ask Wonderland</h2>
+                    <p class="font-magical text-sm text-gray-400">Stuck on a project, or looking for a teammate? Post it here. Full project starters come from the <a href="/chat" class="text-leaf hover:underline">Caterpillar</a>.</p>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 font-magical text-xs">
-                        <label class="flex flex-col gap-1 text-gold">Post as
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 font-magical text-sm">
+                        <label class="flex flex-col gap-1 text-leaf">Post as
                             <select name="user_id" required class="bg-panel-2 text-cream border border-moss rounded px-2 py-2">
                                 <option value="" disabled {{ 'selected' if not form.get('user_id') and not current_user }}>Choose a user</option>
                                 {% for u in users %}
@@ -122,7 +122,7 @@
                                 {% endfor %}
                             </select>
                         </label>
-                        <label class="flex flex-col gap-1 text-gold">Project (optional)
+                        <label class="flex flex-col gap-1 text-leaf">Project (optional)
                             <select name="project_id" class="bg-panel-2 text-cream border border-moss rounded px-2 py-2">
                                 <option value="">None</option>
                                 {% for p in projects %}
@@ -132,16 +132,16 @@
                         </label>
                     </div>
 
-                    <label class="flex flex-col gap-1 font-magical text-xs text-gold">Title
+                    <label class="flex flex-col gap-1 font-magical text-sm text-leaf">Title
                         <input type="text" name="title" required maxlength="{{ limits.title }}" value="{{ form.get('title', '') }}"
                                class="bg-panel-2 text-cream border border-moss rounded px-3 py-2">
                     </label>
-                    <label class="flex flex-col gap-1 font-magical text-xs text-gold">What are you working on, or what do you need advice on?
+                    <label class="flex flex-col gap-1 font-magical text-sm text-leaf">What are you working on, or what do you need advice on?
                         <textarea name="body" required rows="4" maxlength="{{ limits.post }}"
                                   class="bg-panel-2 text-cream border border-moss rounded px-3 py-2">{{ form.get('body', '') }}</textarea>
                     </label>
 
-                    <button type="submit" class="btn-gold">Post</button>
+                    <button type="submit" class="btn-leaf">Post</button>
                 </form>
             </div>
         </section>

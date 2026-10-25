@@ -14,7 +14,7 @@
 
 {% block content %}
         {% call sky("Welcome" ~ (" back" if welcome != "new" else "") ~ ", " ~ user.username, None, "min-h-[300px]") %}
-            <p class="font-magical text-base sm:text-lg font-semibold text-slate-700 max-w-xl">
+            <p class="font-magical text-lg sm:text-xl font-semibold text-slate-700 max-w-xl">
                 {{ user.major or "Major not set" }}
                 &middot; {{ user.time_commitment.raw or "time unknown" }}
                 &middot; {{ user.skill_level or "any difficulty" }}
@@ -22,24 +22,24 @@
             {% if user.interests %}
             <ul class="flex flex-wrap justify-center gap-2 pt-1">
                 {% for interest in user.interests %}
-                <li class="font-magical text-xs tracking-wide bg-cream/90 border border-purple-300/60 rounded-full px-3 py-1 text-slate-800">{{ interest }}</li>
+                <li class="font-magical text-sm tracking-wide bg-cream/90 border border-purple-300/60 rounded-full px-3 py-1 text-slate-800">{{ interest }}</li>
                 {% endfor %}
             </ul>
             {% endif %}
         {% endcall %}
 
         <!-- UNDERGROUND: THE SHELVES -->
-        <section class="relative w-full bg-dirt px-4 pt-14 pb-32 border-t-4 border-[#180e0a] min-h-[600px]">
+        <section class="relative w-full bg-dirt px-4 pt-14 pb-32 border-t-4 border-[#8a6a4b] min-h-[600px]">
             <div class="relative max-w-6xl mx-auto z-20 text-cream">
 
                 {% if data_source == "fake" %}
-                <p class="font-magical text-xs text-gold border border-gold rounded px-4 py-2 mb-6 text-center">
+                <p class="font-magical text-base text-forest font-semibold border-2 border-forest rounded px-4 py-2 mb-6 text-center">
                     Demo data: these users and projects are fictional fixtures, not the real database.
                 </p>
                 {% endif %}
 
                 {% if welcome == "new" %}
-                <p class="font-magical text-sm text-cream/90 border border-moss bg-panel rounded px-4 py-3 mb-8">
+                <p class="font-magical text-base text-cream/90 border border-moss bg-panel rounded px-4 py-3 mb-8">
                     Your profile is sealed. The top shelf is ranked for you; scroll down for every project by major, interest, difficulty and timeframe. Open any card for the full guide, or ask the Caterpillar for help.
                 </p>
                 {% endif %}
@@ -47,8 +47,8 @@
                 {% for row in rows %}
                     {% if row.key == "recommended" and not row.cards %}
                     <section class="mb-10">
-                        <h2 class="font-mystical text-sm md:text-lg text-gold uppercase tracking-wider font-bold mb-2">{{ row.title }}</h2>
-                        <div class="bg-panel border-2 border-moss rounded-md p-6 font-magical text-sm text-gray-300">
+                        <h2 class="font-heading text-xl md:text-2xl text-forest font-bold mb-2">{{ row.title }}</h2>
+                        <div class="bg-panel border-2 border-moss rounded-md p-6 font-magical text-base text-gray-300">
                             Nothing matched your major and interests inside your time and difficulty yet. The shelves below show everything; the Caterpillar can also turn your own idea into a project.
                         </div>
                     </section>
@@ -58,8 +58,8 @@
                 {% endfor %}
 
                 {% if warnings %}
-                <details class="mt-4 font-magical text-xs text-gray-500">
-                    <summary class="cursor-pointer hover:text-gray-300">About these results</summary>
+                <details class="mt-4 font-magical text-base text-ink">
+                    <summary class="cursor-pointer hover:text-forest">About these results</summary>
                     <ul class="mt-2 space-y-1 list-disc pl-5">
                         {% for note in warnings %}<li>{{ note.message }}</li>{% endfor %}
                     </ul>
