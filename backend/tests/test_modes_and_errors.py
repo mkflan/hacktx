@@ -63,13 +63,13 @@ def test_contract_breaking_records_are_503(make_client):
     assert response.json["error"]["code"] == "DATA_CONTRACT_ERROR"
 
 
-def test_anthropic_mode_without_key_is_503_and_ranking_still_works(make_client):
-    client = make_client(settings_override=Settings(llm_mode="anthropic"))
+def test_gemini_mode_without_key_is_503_and_ranking_still_works(make_client):
+    client = make_client(settings_override=Settings(llm_mode="gemini"))
     assert client.get("/health").json["llm_configured"] is False
     response = client.post("/api/users/fixture-ece/chat", json={"mode": "generate_ideas"})
     assert response.status_code == 503
     assert response.json["error"]["code"] == "LLM_NOT_CONFIGURED"
-    assert "ANTHROPIC_API_KEY" in response.json["error"]["message"]
+    assert "GEMINI_API_KEY" in response.json["error"]["message"]
     assert client.post("/api/users/fixture-ece/recommendations", json={}).status_code == 200
 
 
@@ -115,9 +115,9 @@ def test_cors_allows_only_configured_origins(client):
 
 
 def test_settings_from_env_validate_values():
-    settings = Settings.from_env({"LLM_MODE": "Anthropic", "CORS_ORIGINS": "http://a, http://b"})
-    assert settings.llm_mode == "anthropic"
+    settings = Settings.from_env({"LLM_MODE": "Gemini", "CORS_ORIGINS": "http://a, http://b"})
+    assert settings.llm_mode == "gemini"
     assert settings.cors_origins == ("http://a", "http://b")
-    assert "anthropic_api_key" not in repr(Settings(anthropic_api_key="sk-test"))
+    assert "gemini_api_key" not in repr(Settings(gemini_api_key="sk-test"))
     with pytest.raises(ValueError):
         Settings.from_env({"DATA_MODE": "sqlite"})

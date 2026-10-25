@@ -17,8 +17,8 @@ Owners: **App** = application/backend logic (branch `backend-w/o-database`),
 - [x] Recommendations: explainable score, time-fit rules, optional skill/goal preferences
 - [x] Prompt tab: `generate_ideas` and `elaborate_idea`; catalog personalization
 - [x] Mock LLM provider (deterministic, labeled `mock`)
-- [x] Anthropic provider: structured output, one correction, 45 s total deadline, SDK retries
-      off, refusal/truncation/rate-limit/timeout handling, server-side refusal fallback
+- [x] Gemini provider (`gemini-3.8-flash`): structured output, one correction, 45 s total
+      deadline, SDK retries off, refusal/truncation/rate-limit/timeout handling
 - [x] Resource grounding: model may only cite supplied resource IDs; research must be research
 - [x] Error envelope, 404/422/502/503, request size limit, CORS allow-list
 - [x] In-memory TTL cache keyed by content
@@ -51,12 +51,12 @@ Owners: **App** = application/backend logic (branch `backend-w/o-database`),
 
 ## To do: real model and demo
 
-- [ ] **Team** First live Claude call has never happened. The request schema is checked against
-      the models offline, but Anthropic's own acceptance of it (size and feature limits) is unproven
+- [ ] **Team** First live Gemini call has never happened. The request schema is checked against
+      the models offline, but Gemini's own acceptance of it (size and feature limits) is unproven
 
-- [ ] **Team** Put `ANTHROPIC_API_KEY` in `env.txt`, set `LLM_MODE=anthropic`, try one live call
+- [ ] **Team** Put `GEMINI_API_KEY` in `env.txt`, set `LLM_MODE=gemini`, try one live call
       (costs money; not done yet, all LLM tests so far use a fake client)
-- [ ] **Team** Tune `ANTHROPIC_EFFORT` if live calls are too slow for the demo
+- [ ] **Team** Tune `GEMINI_THINKING` if live calls are too slow for the demo
 - [ ] **Team** Rehearse: Explore -> Alex recommendations -> switch to Maya -> generate ideas ->
       elaborate a student idea into a full guide
 

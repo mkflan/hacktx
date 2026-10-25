@@ -9,7 +9,7 @@ from .schemas import IdeasDraft, ProjectPlanDraft
 
 @runtime_checkable
 class LLMProvider(Protocol):
-    """mode is reported as generation_mode ("mock" or "anthropic"). model_id goes in cache keys.
+    """mode is reported as generation_mode ("mock" or "gemini"). model_id goes in cache keys.
 
     Implementations raise AppError for provider failures (503 unavailable, 502 invalid output).
     """

@@ -4,9 +4,9 @@ import os
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 
-LLM_MODES = ("mock", "anthropic")
+LLM_MODES = ("mock", "gemini")
 DATA_MODES = ("fake", "injected")
-EFFORT_LEVELS = ("low", "medium", "high", "xhigh", "max")
+THINKING_LEVELS = ("minimal", "low", "medium", "high")
 DEFAULT_CORS_ORIGINS = (
     "http://localhost:3000",
     "http://localhost:5173",
@@ -28,10 +28,9 @@ def _parse_bool(value: str) -> bool:
 class Settings:
     llm_mode: str = "mock"
     data_mode: str = "fake"
-    anthropic_api_key: str | None = field(default=None, repr=False)
-    anthropic_model: str = "claude-opus-5-5"
-    anthropic_effort: str = "medium"
-    anthropic_fallbacks: bool = True
+    gemini_api_key: str | None = field(default=None, repr=False)
+    gemini_model: str = "gemini-3.8-flash"
+    gemini_thinking: str = "medium"
     llm_deadline_seconds: float = 45.0
     llm_max_tokens: int = 16000
     cors_origins: tuple[str, ...] = DEFAULT_CORS_ORIGINS
@@ -46,8 +45,8 @@ class Settings:
             raise ValueError(f"LLM_MODE must be one of {LLM_MODES}, got {self.llm_mode!r}")
         if self.data_mode not in DATA_MODES:
             raise ValueError(f"DATA_MODE must be one of {DATA_MODES}, got {self.data_mode!r}")
-        if self.anthropic_effort not in EFFORT_LEVELS:
-            raise ValueError(f"ANTHROPIC_EFFORT must be one of {EFFORT_LEVELS}")
+        if self.gemini_thinking not in THINKING_LEVELS:
+            raise ValueError(f"GEMINI_THINKING must be one of {THINKING_LEVELS}")
         if not 5 <= self.llm_deadline_seconds <= 300:
             raise ValueError("LLM_DEADLINE_SECONDS must be between 5 and 300")
 
@@ -64,14 +63,12 @@ class Settings:
             kwargs["llm_mode"] = v.lower()
         if (v := get("DATA_MODE")) is not None:
             kwargs["data_mode"] = v.lower()
-        if (v := get("ANTHROPIC_API_KEY")) is not None:
-            kwargs["anthropic_api_key"] = v
-        if (v := get("ANTHROPIC_MODEL")) is not None:
-            kwargs["anthropic_model"] = v
-        if (v := get("ANTHROPIC_EFFORT")) is not None:
-            kwargs["anthropic_effort"] = v.lower()
-        if (v := get("ANTHROPIC_FALLBACKS")) is not None:
-            kwargs["anthropic_fallbacks"] = _parse_bool(v)
+        if (v := get("GEMINI_API_KEY")) is not None:
+            kwargs["gemini_api_key"] = v
+        if (v := get("GEMINI_MODEL")) is not None:
+            kwargs["gemini_model"] = v
+        if (v := get("GEMINI_THINKING")) is not None:
+            kwargs["gemini_thinking"] = v.lower()
         if (v := get("LLM_DEADLINE_SECONDS")) is not None:
             kwargs["llm_deadline_seconds"] = float(v)
         if (v := get("CORS_ORIGINS")) is not None:

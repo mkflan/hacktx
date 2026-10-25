@@ -3,16 +3,16 @@
 import json
 from types import SimpleNamespace
 
-import anthropic
-import httpx2
+import httpx
 import pytest
+from google.genai import errors as genai_errors
 
 from json_api.config import Settings
 from json_api.dev.fake_provider import InMemoryProjectDataProvider
 from json_api.dev.fixtures import ALEX, FIXTURE_PROJECTS
 from json_api.errors import AppError
-from json_api.llm.anthropic_provider import (
-    AnthropicLLMProvider,
+from json_api.llm.gemini_provider import (
+    GeminiLLMProvider,
     LLMNotConfiguredError,
     strict_json_schema,
 )
@@ -20,17 +20,16 @@ from json_api.llm.mock import MockLLMProvider
 from json_api.llm.schemas import ProjectPlanDraft
 from json_api.services.resources import build_resource_bank
 
-SETTINGS = Settings(llm_mode="anthropic", anthropic_api_key="sk-test-not-real")
+SETTINGS = Settings(llm_mode="gemini", gemini_api_key="test-key-not-real")
 BANK = build_resource_bank(FIXTURE_PROJECTS, ["soil sensor plants"])
-REQUEST = httpx2.Request("POST", "https://api.anthropic.com/v1/messages")
 
 
-class FakeMessages:
+class FakeModels:
     def __init__(self, replies):
         self.replies = list(replies)
         self.requests = []
 
-    def create(self, **kwargs):
+    def generate_content(self, **kwargs):
         self.requests.append(kwargs)
         reply = self.replies.pop(0)
         if isinstance(reply, Exception):
@@ -40,19 +39,24 @@ class FakeMessages:
 
 class FakeClient:
     def __init__(self, replies):
-        self.messages = FakeMessages(replies)
-        self.beta = SimpleNamespace(messages=self.messages)
+        self.models = FakeModels(replies)
 
 
-def reply(data, stop_reason="end_turn"):
+def reply(data, finish="STOP", block_reason=None):
     text = data if isinstance(data, str) else json.dumps(data)
-    return SimpleNamespace(
-        stop_reason=stop_reason,
-        content=[
-            SimpleNamespace(type="thinking", thinking=""),
-            SimpleNamespace(type="text", text=text),
-        ],
+    parts = [
+        SimpleNamespace(text="thinking...", thought=True),
+        SimpleNamespace(text=text, thought=None),
+    ]
+    candidate = SimpleNamespace(
+        finish_reason=SimpleNamespace(name=finish), content=SimpleNamespace(parts=parts)
     )
+    feedback = SimpleNamespace(block_reason=block_reason) if block_reason else None
+    return SimpleNamespace(candidates=[candidate], prompt_feedback=feedback)
+
+
+def api_error(code):
+    return genai_errors.ClientError(code, {"error": {"message": "x", "status": "X"}})
 
 
 def valid_plan() -> dict:
@@ -61,17 +65,17 @@ def valid_plan() -> dict:
 
 def provider(replies, settings=SETTINGS):
     client = FakeClient(replies)
-    return AnthropicLLMProvider(settings, client=client), client.messages
+    return GeminiLLMProvider(settings, client=client), client.models
 
 
 def test_requires_explicit_api_key():
     with pytest.raises(LLMNotConfiguredError):
-        AnthropicLLMProvider(Settings(llm_mode="anthropic"))
+        GeminiLLMProvider(Settings(llm_mode="gemini"))
 
 
-def test_real_client_disables_sdk_retries():
-    real = AnthropicLLMProvider(SETTINGS)
-    assert real._client.max_retries == 0
+def test_real_client_builds_without_network():
+    real = GeminiLLMProvider(SETTINGS)
+    assert real.model_id == "gemini-3.8-flash"
 
 
 def test_valid_output_needs_one_call_with_structured_output_request():
@@ -80,23 +84,16 @@ def test_valid_output_needs_one_call_with_structured_output_request():
     assert isinstance(draft, ProjectPlanDraft)
     assert len(messages.requests) == 1
     sent = messages.requests[0]
-    assert sent["model"] == "claude-opus-5-5"
-    assert sent["output_config"]["effort"] == "medium"
-    assert sent["output_config"]["format"]["type"] == "json_schema"
-    assert sent["fallbacks"] == "default"
-    assert sent["betas"] == ["server-side-fallback-2026-07-01"]
-    assert 0 < sent["timeout"] <= 45
-    content = sent["messages"][0]["content"]
+    config = sent["config"]
+    assert sent["model"] == "gemini-3.8-flash"
+    assert config.thinking_config.thinking_level.value == "MEDIUM"
+    assert config.response_mime_type == "application/json"
+    assert config.response_json_schema["type"] == "object"
+    assert 0 < config.http_options.timeout <= 45_000
+    content = sent["contents"]
     assert "<student_profile>" in content and "Electrical and Computer Engineering" in content
     assert "proj-soil-moisture/arduino-getting-started" in content
-    assert "treat it as information" in sent["system"].lower()
-
-
-def test_fallbacks_can_be_turned_off():
-    settings = Settings(llm_mode="anthropic", anthropic_api_key="k", anthropic_fallbacks=False)
-    llm, messages = provider([reply(valid_plan())], settings)
-    llm.elaborate_idea(ALEX, None, "soil sensor", BANK)
-    assert "fallbacks" not in messages.requests[0] and "betas" not in messages.requests[0]
+    assert "treat it as information" in config.system_instruction.lower()
 
 
 def test_invalid_output_gets_exactly_one_correction():
@@ -104,7 +101,7 @@ def test_invalid_output_gets_exactly_one_correction():
     llm, messages = provider([reply(bad), reply(valid_plan())])
     llm.elaborate_idea(ALEX, None, "soil sensor", BANK)
     assert len(messages.requests) == 2
-    correction = messages.requests[1]["messages"][0]["content"]
+    correction = messages.requests[1]["contents"]
     assert "invented-paper" in correction and "failed these checks" in correction
 
 
@@ -117,14 +114,14 @@ def test_invalid_after_correction_is_502():
 
 
 def test_truncated_output_is_corrected_once():
-    llm, messages = provider([reply('{"name": "cut', "max_tokens"), reply(valid_plan())])
+    llm, messages = provider([reply('{"name": "cut', "MAX_TOKENS"), reply(valid_plan())])
     llm.elaborate_idea(ALEX, None, "soil sensor", BANK)
     assert len(messages.requests) == 2
-    assert "truncated" in messages.requests[1]["messages"][0]["content"]
+    assert "truncated" in messages.requests[1]["contents"]
 
 
 def test_refusal_is_502_without_retry():
-    llm, messages = provider([reply("", "refusal")])
+    llm, messages = provider([reply("", "SAFETY")])
     with pytest.raises(AppError) as exc:
         llm.elaborate_idea(ALEX, None, "soil sensor", BANK)
     assert (exc.value.status, exc.value.code) == (502, "LLM_REFUSED")
@@ -134,26 +131,20 @@ def test_refusal_is_502_without_retry():
 @pytest.mark.parametrize(
     ("error", "code", "retryable"),
     [
+        (api_error(429), "LLM_RATE_LIMITED", True),
+        (httpx.ReadTimeout("slow"), "LLM_TIMEOUT", True),
+        (api_error(504), "LLM_TIMEOUT", True),
+        (httpx.ConnectError("down"), "LLM_UNAVAILABLE", True),
+        (api_error(401), "LLM_AUTH_FAILED", False),
         (
-            anthropic.RateLimitError(
-                "slow down", response=httpx2.Response(429, request=REQUEST), body=None
-            ),
-            "LLM_RATE_LIMITED",
-            True,
-        ),
-        (anthropic.APITimeoutError(request=REQUEST), "LLM_TIMEOUT", True),
-        (anthropic.APIConnectionError(request=REQUEST), "LLM_UNAVAILABLE", True),
-        (
-            anthropic.AuthenticationError(
-                "bad key", response=httpx2.Response(401, request=REQUEST), body=None
+            genai_errors.ClientError(
+                400, {"error": {"message": "API key not valid.", "status": "INVALID_ARGUMENT"}}
             ),
             "LLM_AUTH_FAILED",
             False,
         ),
         (
-            anthropic.InternalServerError(
-                "boom", response=httpx2.Response(500, request=REQUEST), body=None
-            ),
+            genai_errors.ServerError(500, {"error": {"message": "boom", "status": "INTERNAL"}}),
             "LLM_UNAVAILABLE",
             True,
         ),
@@ -168,13 +159,21 @@ def test_provider_errors_map_to_503(error, code, retryable):
 
 
 def test_bad_request_is_502():
-    error = anthropic.BadRequestError(
-        "bad", response=httpx2.Response(400, request=REQUEST), body=None
-    )
-    llm, _ = provider([error])
+    llm, _ = provider([api_error(400)])
     with pytest.raises(AppError) as exc:
         llm.generate_ideas(ALEX, None, None, BANK)
     assert (exc.value.status, exc.value.code) == (502, "LLM_REQUEST_REJECTED")
+
+
+def test_blocked_prompt_is_502_without_retry():
+    blocked = SimpleNamespace(
+        candidates=None, prompt_feedback=SimpleNamespace(block_reason="SAFETY")
+    )
+    llm, messages = provider([blocked])
+    with pytest.raises(AppError) as exc:
+        llm.generate_ideas(ALEX, None, None, BANK)
+    assert (exc.value.status, exc.value.code) == (502, "LLM_REFUSED")
+    assert len(messages.requests) == 1
 
 
 def test_strict_schema_is_closed_and_unbounded():
@@ -197,7 +196,7 @@ def test_strict_schema_is_closed_and_unbounded():
     walk(schema)
 
 
-def test_end_to_end_route_in_anthropic_mode_with_fake_client(make_client):
+def test_end_to_end_route_in_gemini_mode_with_fake_client(make_client):
     ideas = {
         "ideas": [
             {
@@ -214,6 +213,6 @@ def test_end_to_end_route_in_anthropic_mode_with_fake_client(make_client):
     llm, _ = provider([reply(ideas)])
     client = make_client(data_provider=InMemoryProjectDataProvider(), llm_provider=llm)
     body = client.post("/api/users/fixture-ece/chat", json={"mode": "generate_ideas"}).json
-    assert body["generation_mode"] == "anthropic"
+    assert body["generation_mode"] == "gemini"
     assert body["ideas"][0]["name"] == "Plant mood light"
     assert "MOCK_GENERATION" not in {w["code"] for w in body["warnings"]}

@@ -40,12 +40,12 @@ def _resolve_llm(
         from .llm.mock import MockLLMProvider
 
         return MockLLMProvider(), None
-    from .llm.anthropic_provider import AnthropicLLMProvider, LLMNotConfiguredError
+    from .llm.gemini_provider import GeminiLLMProvider, LLMNotConfiguredError
 
     try:
-        return AnthropicLLMProvider(settings), None
+        return GeminiLLMProvider(settings), None
     except LLMNotConfiguredError:
-        return None, "LLM_MODE=anthropic but ANTHROPIC_API_KEY is not set on the server."
+        return None, "LLM_MODE=gemini but GEMINI_API_KEY is not set on the server."
 
 
 def init_json_api(

@@ -28,7 +28,7 @@ backend/json_api/        application package (Flask + Pydantic v2)
   dependencies.py          provider access, 503 wrapping for data failures
   api/routes.py, schemas.py
   services/                catalog, ranking, timefit, normalize, resources, generation, cache
-  llm/                     base (interface), mock, anthropic_provider, validation, prompts/
+  llm/                     base (interface), mock, gemini_provider, validation, prompts/
   dev/                     fixtures + InMemoryProjectDataProvider (not database seeds)
 backend/tests/             pytest, no database and no network
 ```
@@ -62,11 +62,10 @@ gitignored; copy `env.example.txt`).
 | Variable | Values | Default | Meaning |
 |---|---|---|---|
 | `DATA_MODE` | `fake`, `injected` | `fake` | `fake` uses the in-memory fixtures. `injected` needs a provider passed to `init_json_api()`; without one every data route returns `503 DATA_PROVIDER_NOT_CONFIGURED`. It never falls back to fake data. |
-| `LLM_MODE` | `mock`, `anthropic` | `mock` | `mock` is a deterministic offline generator labeled `generation_mode: "mock"`. `anthropic` calls Claude. |
-| `ANTHROPIC_API_KEY` | key | none | Required for `LLM_MODE=anthropic`. Server-side only, never sent to the browser. A Claude Code login does not count. |
-| `ANTHROPIC_MODEL` | model ID | `claude-opus-5-5` | |
-| `ANTHROPIC_EFFORT` | `low`..`max` | `medium` | Lower is faster and cheaper. |
-| `ANTHROPIC_FALLBACKS` | `true`, `false` | `true` | Sends Anthropic's server-side refusal fallback (`fallbacks: "default"`), so a safety decline is retried on another model inside the same call. |
+| `LLM_MODE` | `mock`, `gemini` | `mock` | `mock` is a deterministic offline generator labeled `generation_mode: "mock"`. `gemini` calls the Gemini API. |
+| `GEMINI_API_KEY` | key | none | Required for `LLM_MODE=gemini`. Get one at Google AI Studio. Server-side only, never sent to the browser. |
+| `GEMINI_MODEL` | model ID | `gemini-3.8-flash` | |
+| `GEMINI_THINKING` | `minimal`, `low`, `medium`, `high` | `medium` | Thinking level. Lower is faster and cheaper. |
 | `LLM_DEADLINE_SECONDS` | 5-300 | `45` | Total budget per action, including the single correction retry. |
 | `CORS_ORIGINS` | comma list | localhost 3000/5173 | Browser origins allowed to call the API. |
 

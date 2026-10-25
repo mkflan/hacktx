@@ -6,7 +6,7 @@ from pydantic import TypeAdapter
 from json_api.contracts import NormalizedUser, Resource, TimeValue
 from json_api.dev.fake_provider import InMemoryProjectDataProvider
 from json_api.dev.fixtures import ALEX
-from json_api.llm.anthropic_provider import strict_json_schema
+from json_api.llm.gemini_provider import strict_json_schema
 from json_api.llm.prompting import build_user_message
 from json_api.llm.schemas import IdeasDraft, ProjectPlanDraft
 from json_api.services.resources import default_search_queries

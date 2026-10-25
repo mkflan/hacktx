@@ -43,7 +43,7 @@ def test_different_users_never_share_entries(client, spy):
 
 def test_mock_and_real_modes_never_share_entries(make_client, data):
     # Same cache-relevant content, different provider mode -> different keys.
-    spy_mock, spy_real = SpyLLM(mode="mock"), SpyLLM(mode="anthropic", model_id="claude-opus-5-5")
+    spy_mock, spy_real = SpyLLM(mode="mock"), SpyLLM(mode="gemini", model_id="gemini-3.8-flash")
     app_client = make_client(data_provider=data, llm_provider=spy_mock)
     post(app_client)
     ctx = app_client.application.extensions["json_api"]
