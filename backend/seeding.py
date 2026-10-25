@@ -7,6 +7,7 @@ reseed because nothing here deletes.
 
 import json
 import sqlite3
+from pathlib import Path
 
 import seed_data
 
@@ -200,9 +201,42 @@ def seed_starters(conn: sqlite3.Connection) -> None:
         )
 
 
+CACHE_SNAPSHOT = Path(__file__).parent / "serp_cache.json"
+
+
+def seed_search_cache(conn: sqlite3.Connection) -> int:
+    """Load the committed SerpApi snapshot (if any) and rebuild every resource and shop link it
+    can from it, without spending a search. Returns the number of projects touched."""
+    import enrich
+    import serp
+    from json_api.search import SearchError
+    from sqlite_provider import SQLiteProjectDataProvider
+
+    if not CACHE_SNAPSHOT.exists():
+        return 0
+    serp.import_cache(conn, CACHE_SNAPSHOT)
+    cache_only = serp.CacheOnlySearch(lambda: conn)
+    touched = 0
+    for project in SQLiteProjectDataProvider(lambda: conn).list_projects():
+        hit = False
+        for engine in ("youtube", "google", "google_scholar"):
+            try:
+                enrich.dig_project(conn, cache_only, project, engines=(engine,))
+                hit = True
+            except SearchError:
+                continue
+        try:
+            enrich.shop_materials(conn, cache_only, project, max_items=1)
+        except SearchError:
+            pass
+        touched += hit
+    return touched
+
+
 def seed_all(conn: sqlite3.Connection) -> None:
     seed_users(conn)
     seed_projects(conn)
     seed_forum(conn)
     seed_starters(conn)
     conn.commit()
+    seed_search_cache(conn)

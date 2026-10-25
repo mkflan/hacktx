@@ -1,204 +1,118 @@
-# hacktx
+# Research Rabbit
 
-HackTX 26 project app backend: helps students find, rank and plan projects.
+**Find a project that fits your major, your interests, your time and your level, then get
+everything you need to start it: a plan, a shopping list with where to buy, documentation,
+tutorials, papers, and a mentor who knows the project.**
 
-Three tabs, one shared user selector:
+Built at HackTX 26 for the SerpApi track. Flask + SQLite + Gemini + SerpApi.
 
-| Tab | What the backend does | LLM? |
-|---|---|---|
-| Explore | Lists shared catalog projects, filtered and grouped by major or interest | No |
-| Recommendations | Ranks catalog projects for the selected user's saved profile, with reasons | No |
-| Prompt | Generates new idea cards, or turns a student's idea into a full project plan | Yes |
+## What it does
 
-Project details open inside the current tab. A card can also be **personalized**: the catalog
-project is loaded and a tailored plan is generated for the selected user, without changing the
-shared record.
+1. **Profile in thirty seconds.** The landing pop-up asks for a username, major, interests,
+   timeframe and difficulty. No password.
+2. **The Rabbit Hole.** A Netflix-style dashboard: the top shelf is ranked for the student
+   (major match, interest overlap, time fit, difficulty), then shelves by major, interest,
+   difficulty and timeframe over a catalog of 47 projects across 9 majors.
+3. **Project pages.** Getting-started outline, materials with store links and prices, and
+   grouped sources: documentation, YouTube tutorials, papers. Every link is either written by
+   the team or returned by a SerpApi search, and each one says which.
+4. **Ask the Caterpillar.** A Gemini mentor in two modes: about one catalog project (it knows the
+   outline, materials and sources) or developing the student's own pitch. It may link only to
+   sources it was given; anything else is removed before the student sees it. "Dig deeper" runs
+   a live SerpApi search mid-conversation.
+5. **Project starters.** "Turn into a project starter": SerpApi finds tutorials and papers for
+   the idea, Gemini writes the full plan (milestones, materials, schedule, sources), and one
+   click posts it to Wonderland.
+6. **Wonderland.** The community forum: starters and discussions, searchable and sortable.
 
-`backend/app.py` is the one app: the pages in `frontend/templates/`, the SQLite database and
-the `/api/...` routes.
-Data comes from SQLite (`data_source: "sqlite"`), seeded with two demo students and ten sample
-projects; `DATA_MODE=fake` switches to the in-memory fixtures instead. See
-[INTEGRATION.md](docs/INTEGRATION.md). Task status is tracked in [TODO.md](docs/TODO.md).
+## Where SerpApi does the work
 
-## Layout
+Research Rabbit does not make sources up; it digs them up. `backend/serp.py` wraps four SerpApi
+engines behind one cached client (the `serp_cache` table, so a query is never paid for twice):
 
-```
-frontend/templates/      Jinja pages: base, index (/), forum (/forum), dashboard (/dashboard/<id>)
-frontend/static/         static files served at /static/
-backend/app.py           create_app(): page routes + init_json_api(app, SQLite provider)
-backend/db.py            SQLite connection, schema version check, demo seeding, connect_memory()
-backend/schema.sql       tables (users, projects, resources); seed.sql: demo rows
-backend/sqlite_provider.py  ProjectDataProvider over SQLite (rows -> json_api DTOs)
-backend/json_api/        application package (Flask + Pydantic v2), never opens SQLite
-  main.py                  create_app() / init_json_api(): the one place providers are injected
-  contracts.py             DTOs + ProjectDataProvider (4 read-only methods)
-  dependencies.py          provider access, 503 wrapping for data failures
-  api/routes.py, schemas.py
-  services/                catalog, ranking, timefit, normalize, resources, generation, cache
-  llm/                     base (interface), mock, gemini_provider, validation, prompts/
-  dev/                     fixtures + InMemoryProjectDataProvider (not database seeds)
-backend/tests/           pytest: json_api, SQLite provider, pages; in-memory SQLite, no network
-```
+| Engine | Used for |
+|---|---|
+| `youtube` | tutorials for each project, "Dig deeper", starters |
+| `google` | documentation and guides for each project, "Dig deeper" |
+| `google_scholar` | papers for intermediate and advanced projects, starters |
+| `google_shopping` | where to buy each project's first material, with price and store |
 
-## Setup (Windows, Python 3.14)
+`scripts/enrich_catalog.py` fills the catalog within a search budget; `backend/serp_cache.json`
+is the committed snapshot, so a fresh clone rebuilds every found resource offline at zero cost.
+
+## Run it
 
 ```powershell
 py -3.14 -m venv .venv
 .venv\Scripts\python -m pip install -r requirements.txt
-```
-
-## Run
-
-```powershell
+copy env.example.txt env.txt        # then fill in GEMINI_API_KEY and SERPAPI_API_KEY
 cd backend
-..\.venv\Scripts\python app.py            # http://127.0.0.1:8000, SQLite at backend/app.db
+..\.venv\Scripts\python app.py      # http://127.0.0.1:8000
 ```
 
-The first run creates `backend/app.db` (gitignored) and seeds the demo data; the users are
-`GET /api/users` IDs `1` (alex_demo) and `2` (maya_demo). If an older `app.db` exists, the app
-refuses to start and asks you to delete it. `python -m json_api` still runs the JSON API alone
-on fixtures.
-
-Pages: `/` (home), `/forum`, `/dashboard/1` and `/dashboard/2` (the demo students' ranked
-projects). The JSON API is under `/api/...` on the same port.
+The first start creates `backend/app.db`, seeds the catalog, the demo students and the forum,
+and replays `serp_cache.json`. Demo students: `alex_demo` (ECE, beginner, 12 h) and `maya_demo`
+(CS, intermediate, 40 h); the nav switcher jumps between them. `docs/DEMO.md` is the run sheet.
 
 Tests and lint, from the repo root:
 
 ```powershell
-.venv\Scripts\python -m pytest
-.venv\Scripts\ruff check backend
+.venv\Scripts\python -m pytest       # in-memory SQLite, mock LLM, fake search; no network
+.venv\Scripts\ruff check backend scripts
 ```
 
-## Modes
+## Settings
 
-Settings come from environment variables, or `env.txt` / `.env` in the repo root (both
-gitignored; copy `env.example.txt`).
+`env.txt` or `.env` in the repo root (both gitignored; copy `env.example.txt`).
 
 | Variable | Values | Default | Meaning |
 |---|---|---|---|
-| `DATA_MODE` | `fake`, `injected` | `injected` in `app.py`, `fake` in `python -m json_api` | `injected` reads SQLite through `sqlite_provider.py`. `fake` uses the in-memory fixtures. Without a provider every data route returns `503 DATA_PROVIDER_NOT_CONFIGURED`; it never falls back to fake data. |
-| `LLM_MODE` | `mock`, `gemini` | `mock` | `mock` is a deterministic offline generator labeled `generation_mode: "mock"`. `gemini` calls the Gemini API. |
-| `GEMINI_API_KEY` | key | none | Required for `LLM_MODE=gemini`. Get one at Google AI Studio. Server-side only, never sent to the browser. |
-| `GEMINI_MODEL` | model ID | `gemini-3.8-flash` | |
-| `GEMINI_THINKING` | `minimal`, `low`, `medium`, `high` | `medium` | Thinking level. Lower is faster and cheaper. |
-| `LLM_DEADLINE_SECONDS` | 5-300 | `45` | Total budget per action, including the single correction retry. |
-| `CORS_ORIGINS` | comma list | localhost 3000/5173 | Browser origins allowed to call the API. |
+| `LLM_MODE` | `mock`, `gemini` | `mock` | `mock` is a deterministic offline mentor labeled `generation_mode: "mock"`. |
+| `GEMINI_API_KEY` | key | none | Required for `LLM_MODE=gemini`. Server-side only. |
+| `GEMINI_MODEL` | model ID | `gemini-3.6-flash` | 3.8 Flash was overloaded on every live call during the hackathon. |
+| `GEMINI_THINKING` | `minimal`..`high` | `medium` | Lower is faster. |
+| `SERPAPI_API_KEY` | key | none | Enables "Dig deeper", starter sources and the enrichment script. Without it the catalog still works from the authored seed and the cache snapshot. |
+| `LLM_DEADLINE_SECONDS` | 5-300 | `45` | Total budget per generation, including the one correction retry. |
+| `SECRET_KEY` | string | dev default | Signs the cookie that remembers the current student. |
+| `DATA_MODE` | `injected`, `fake` | `injected` | `fake` serves json_api's in-memory fixtures instead of SQLite (tests and offline demos). |
 
-Real-mode failures are explicit: no key or provider down returns 503, invalid output after one
-correction returns 502. There is no silent fallback to mock.
+## How it works
 
-## Demo flow (curl)
-
-Use Git Bash, or `curl.exe` in PowerShell (`curl` there is a different command).
-
-```bash
-B=http://127.0.0.1:8000
-curl -s $B/health
-curl -s $B/api/users                                      # user selector
-
-# Explore
-curl -s "$B/api/projects?group_by=interest&major=ECE&limit=30&offset=0"
-curl -s $B/api/projects/facets
-curl -s $B/api/projects/proj-soil-moisture
-
-# Recommendations: Alex, then switch to Maya
-curl -s -X POST $B/api/users/fixture-ece/recommendations -H "Content-Type: application/json" -d '{}'
-curl -s -X POST $B/api/users/fixture-cs/recommendations -H "Content-Type: application/json" \
-  -d '{"limit":3,"preferences":{"skill_level":"beginner"}}'
-
-# Prompt: new ideas, then elaborate the student's own idea into a full plan
-curl -s -X POST $B/api/users/fixture-cs/chat -H "Content-Type: application/json" \
-  -d '{"mode":"generate_ideas","topic":"Japanese kanji","limit":3}'
-curl -s -X POST $B/api/users/fixture-cs/chat -H "Content-Type: application/json" \
-  -d '{"mode":"elaborate_idea","idea":"A web app that quizzes me on kanji and charts my progress"}'
-
-# Personalize a catalog card for the selected user
-curl -s -X POST $B/api/users/fixture-ece/projects/proj-soil-moisture/personalize \
-  -H "Content-Type: application/json" -d '{"preferences":{"budget_usd":30}}'
+```
+browser ──> pages.py (Jinja) ──> json_api.services ──┐
+       └──> /api/... (json_api)                      ├──> ProjectDataProvider = SQLite (sqlite_provider.py)
+                                                     ├──> LLMProvider        = Gemini | mock
+                                                     └──> SearchProvider     = SerpApi (serp.py) | disabled
 ```
 
-To elaborate a generated idea card, send its `name` and `summary` as the `idea` text.
+- `backend/app.py` is the Flask factory. `backend/pages.py` renders `frontend/templates/`.
+- `backend/json_api/` is the application core: the `/api/...` routes, explainable ranking, the
+  LLM providers and prompts, the Caterpillar (`services/assistant.py`) and the SerpApi result
+  conversions (`search.py`). It never opens SQLite or calls SerpApi itself; both are injected.
+- `backend/schema.sql`, `db.py`, `seed_data/`, `seeding.py` own the data: schema v4, the
+  authored catalog, demo users, forum starters and the search-cache replay.
+- Rules the code enforces: generated plans may cite only supplied resource IDs; chat replies
+  lose any URL that was not supplied; every search result is labeled `serpapi:<engine>` and
+  stays `provided_unverified` (a search hit is not a content check); mock output is labeled.
 
-## API
+## Layout
 
-| Method and path | Body | Returns |
-|---|---|---|
-| `GET /health` | | modes, whether providers are configured (no database or model probe) |
-| `GET /api/users` | | `{users:[{id,username,major}], data_source}` |
-| `GET /api/users/{user_id}` | | `{user, data_source}` |
-| `GET /api/projects` | query: `group_by=major\|interest`, `major`, `interest`, `difficulty`, `limit` 1-100, `offset` | `{groups:[{key,label,projects}], total, limit, offset, data_source, warnings}` |
-| `GET /api/projects/facets` | | majors, interests, difficulties (with counts) from the data |
-| `GET /api/projects/{project_id}` | | `{project, missing_details, warnings, data_source}` |
-| `POST /api/users/{user_id}/recommendations` | `{limit?:1-3, preferences?}` | `{user_id, projects:[RecommendationCard], data_source, warnings}` |
-| `POST /api/users/{user_id}/chat` | `{mode:"generate_ideas", topic?, limit?, preferences?}` | `{mode, user_id, ideas, generation_mode, data_source, persisted:false, warnings, cache_hit}` |
-| | `{mode:"elaborate_idea", idea, preferences?}` | `{mode, user_id, original_idea, project:ProjectPlan, generation_mode, data_source, persisted:false, warnings, cache_hit}` |
-| `POST /api/users/{user_id}/projects/{project_id}/personalize` | `{preferences?}` | `{user_id, source_project_id, project:ProjectPlan, generation_mode, data_source, persisted:false, warnings, cache_hit}` |
-
-`preferences` (all optional, used only for that request, never saved): `skill_level`
-(beginner/intermediate/advanced), `technical_goals` (up to 10), `existing_skills` (up to 20),
-`budget_usd` (at least 0), `available_materials` (up to 20). Unknown fields anywhere in a body
-or query are rejected with 422, so a body can never replace the saved major, interests or time.
-
-Filters: `major` and `interest` are case-insensitive, handle aliases (ECE, CS, ME) and match
-tag words ("sensor" matches "sensors"). All filters combine with AND. Pagination runs over
-unique projects in stable ID order before grouping, so a project with two majors can appear in
-two groups but counts once in `total`. Projects with unknown difficulty appear without a
-difficulty filter and are left out (with a warning) when one is applied.
-
-Example recommendation card (trimmed):
-
-```json
-{
-  "project": {"id": "proj-soil-moisture", "name": "Smart Soil Moisture Monitor", "...": "..."},
-  "score": 7.0,
-  "score_components": {"major_match": 1.0, "interest_overlap": 0.67, "time_fit_bonus": 2.0, "preference_bonus": 0.0},
-  "matched_majors": ["Electrical and Computer Engineering"],
-  "matched_interests": ["sensors", "plants"],
-  "time_fit": {"status": "fits", "explanation": "Estimated 10 total hours fits your 12 total hours."},
-  "reasons": ["Matches your major (...).", "Shares your interests: sensors, plants.", "..."],
-  "warnings": []
-}
+```
+backend/app.py            Flask factory: pages + json_api + SQLite + SerpApi wiring
+backend/pages.py          landing, profile form, dashboard shelves, project page, chat, forum
+backend/profiles.py       the profile write path          backend/forum.py   posts, starters, search
+backend/serp.py           SerpApi client, cache, export    backend/enrich.py  store found resources
+backend/db.py, schema.sql, seeding.py, seed_data/        schema v4 and the authored seed
+backend/serp_cache.json   committed SerpApi snapshot (replayed on first start)
+backend/json_api/         routes, ranking, LLM providers + prompts, assistant, search conversions
+backend/tests/            pytest; in-memory SQLite, mock LLM, fake search
+frontend/templates/       base, index, dashboard, project, chat, forum, post + macros
+frontend/static/rabbit.js markdown + plan rendering in the browser
+scripts/enrich_catalog.py budgeted SerpApi enrichment of the catalog (--export refreshes the snapshot)
+docs/                     SPEC.md, DEMO.md, INTEGRATION.md, TODO.md, BACKLOG.md
 ```
 
-The score is a readable heuristic, not a probability:
-`3*major_match + 3*interest_overlap + time_fit_bonus (0 or 2) + preference_bonus`.
-Projects whose known total hours exceed a known total-hours budget are excluded. A
-`hours_per_week` budget is not a total cap: those cards show an estimated number of weeks
-instead. Weeks are never converted to hours.
+## Not done
 
-A `ProjectPlan` has: name, summary, suggested majors/interests, difficulty (nullable) with
-assumptions, deliverable, learning objectives, prerequisites, estimated total hours, a weekly
-schedule, estimated cost (nullable), materials and software, 4-8 milestones (objective, steps,
-expected output, definition of done, pitfalls, hours, resource IDs), `resources`,
-`research_connections`, `similar_examples`, 3 customization ideas, success criteria, first
-action, scope adjustments, constraint warnings, assumptions and `suggested_search_queries`.
-Resource lists only ever contain records supplied by the data provider; the model can only
-pick their IDs. When nothing fits, the lists are empty, a warning says so, and search queries
-are offered as suggestions.
-
-Errors always look like `{"error": {"code", "message", "retryable"}}` (422 adds `details`).
-Codes include `USER_NOT_FOUND`, `PROJECT_NOT_FOUND` (404), `VALIDATION_ERROR` (422),
-`DATA_PROVIDER_NOT_CONFIGURED`, `DATA_UNAVAILABLE`, `LLM_NOT_CONFIGURED`, `LLM_RATE_LIMITED`,
-`LLM_TIMEOUT`, `LLM_UNAVAILABLE` (503), and `LLM_INVALID_OUTPUT`, `LLM_REFUSED` (502).
-
-## Frontend notes
-
-- Keep the selected `user_id` in the browser if you like; profile values always come from the
-  server.
-- Personalized responses include `user_id`. When the user switches, ignore any late response
-  whose `user_id` is not the currently selected user (or cancel it with `AbortController`).
-- Show `warnings` and `assumptions`; they carry the honesty labels (mock output, unverified
-  links, unknown time or difficulty).
-- `persisted` is always `false`: generated plans are not saved anywhere yet.
-
-## Caching
-
-Valid generated responses are cached in memory (100 entries, 15 minutes). The key is a hash of
-the actual user record, preferences, idea or project, resource bank, prompt version, model and
-mode, so editing a profile changes the key. The cache is lost on restart, and two identical
-requests sent at the same moment may both reach the model.
-
-## Not done here
-
-Generated plans are not saved (`persisted: false`), and there is no history yet. The database
-is read-only from the app's side. Open items are in [TODO.md](docs/TODO.md).
+Login, profile editing, saved chat history, verified sources and public deployment: see
+`docs/BACKLOG.md`.

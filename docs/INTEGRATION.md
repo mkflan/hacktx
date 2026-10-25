@@ -8,40 +8,51 @@ API. Rashmi and Viraj own all of it; Kai handed over the schema, seed and provid
 
 | Path | What it is |
 |---|---|
-| `backend/app.py` | `create_app()`: page routes `/`, `/forum`, `/dashboard/<user_id>`, plus `init_json_api()` |
-| `frontend/templates/`, `frontend/static/` | Jinja pages (`base.html`, `index.html`, `forum.html`, `dashboard.html`) and static files |
-| `backend/db.py` | SQLite connection per request, schema version check, demo seeding, `connect_memory()` for tests |
-| `backend/schema.sql`, `backend/seed.sql` | Tables (schema version 3) and the demo rows |
+| `backend/app.py` | `create_app()`: wires SQLite, the LLM and SerpApi providers into `init_json_api()` and registers the pages |
+| `backend/pages.py` | HTML routes: landing + profile form, dashboard shelves, project page, "Dig deeper", chat page, forum, starters |
+| `frontend/templates/`, `frontend/static/` | Jinja pages (`base`, `index`, `dashboard`, `project`, `chat`, `forum`, `post`, `_macros`, `_plan`) and `rabbit.js` |
+| `backend/db.py` | SQLite connection per request, schema version check, seeding on start, `connect_memory()` for tests |
+| `backend/schema.sql` | Tables, schema version 4 (users, projects, materials, resources, posts, comments, serp_cache) |
+| `backend/seed_data/`, `backend/seeding.py` | The authored catalog (47 projects), vocabulary, demo users, community starters; idempotent Python seeding plus replay of `serp_cache.json` |
 | `backend/sqlite_provider.py` | `SQLiteProjectDataProvider`: read-only queries and the row-to-DTO mapping |
-| `backend/json_api/` | `/api/...` endpoints, ranking, Gemini generation and the `ProjectDataProvider` contract. JSON only; it never renders pages or imports `sqlite3` |
+| `backend/profiles.py`, `backend/forum.py`, `backend/enrich.py` | SQLite write paths: profiles, posts and starters, resources found by search |
+| `backend/serp.py` | `SerpApiClient` (cached in `serp_cache`), `CacheOnlySearch`, cache export/import |
+| `backend/json_api/` | `/api/...` endpoints, ranking, Gemini providers, the Caterpillar (`services/assistant.py`), SerpApi conversions (`search.py`), the provider contracts. JSON only; never opens SQLite or calls SerpApi |
 | `backend/json_api/dev/` | Fake data for tests and offline demos only |
-| `backend/tests/` | pytest: json_api, the SQLite provider and the pages. SQLite only in memory, fake LLM, no network |
+| `backend/tests/` | pytest: json_api, providers, pages, chat, search. SQLite only in memory, mock LLM, fake search, no network |
+| `scripts/enrich_catalog.py` | Budgeted SerpApi enrichment of the catalog; `--export` refreshes the committed snapshot |
 
 ## How the pieces connect
 
 ```
-browser ──> app.py pages ──> json_api.services (ranking) ──┐
-       └──> /api/... (json_api routes) ────────────────────┼──> ProjectDataProvider
-                                                           │      = SQLiteProjectDataProvider(db.get_db)
-                                                           └──> LLMProvider = Gemini (or mock)
+browser ──> pages.py (Jinja) ──> json_api.services ──┐
+       └──> /api/... (json_api routes) ──────────────┼──> ProjectDataProvider = SQLiteProjectDataProvider(db.get_db)
+                                                     ├──> LLMProvider        = GeminiLLMProvider | MockLLMProvider
+                                                     └──> SearchProvider     = SerpApiClient | DisabledSearch
 ```
 
-`create_app()` loads `env.txt`, builds `SQLiteProjectDataProvider(db.get_db)` and calls
-`init_json_api(app, data_provider=...)`. Every request gets its own SQLite connection, closed on
-teardown. Page routes call `json_api.services` directly instead of going through HTTP.
-`DATA_MODE=fake` swaps SQLite for the in-memory fixtures (pages then show a "demo data" banner).
-`python -m json_api` still runs the JSON API alone on fixtures.
+`create_app()` loads `env.txt` / `.env`, builds the three providers and calls
+`init_json_api(app, data_provider=..., llm_provider=..., search_provider=...)`. Every request
+gets its own SQLite connection, closed on teardown. Page routes call `json_api.services`
+directly instead of going through HTTP. `DATA_MODE=fake` swaps SQLite for the in-memory
+fixtures (pages then show a "demo data" banner). `python -m json_api` still runs the JSON API
+alone on fixtures.
 
 Tests call `create_app(settings=..., config={"DATABASE": ":memory:"}, data_provider=...,
-llm_provider=...)`, so they never read `env.txt`, open `app.db` or call Gemini.
+llm_provider=..., search_provider=...)`, so they never read `env.txt`, open `app.db`, call
+Gemini or call SerpApi (`tests/fake_search.py` has canned SerpApi-shaped payloads).
 
 ## Rules that keep the layers apart
 
 - `json_api/` never opens SQLite, imports `sqlite3` or assumes a table layout. It only calls
-  the four methods below. All SQL lives in `db.py`, `schema.sql`, `seed.sql` and
-  `sqlite_provider.py`.
+  the four methods below. All SQL lives in the backend/ modules in the folder map.
+- `json_api/` never calls SerpApi: `search.py` holds the `SearchProvider` protocol and the pure
+  conversions from SerpApi payloads to `Resource` records; `backend/serp.py` does the HTTP and
+  the caching. Every found record is `source="serpapi:<engine>"` and `provided_unverified`.
+- The model may cite only supplied resource IDs (plans) or supplied URLs (chat replies, which
+  lose any other URL before the student sees them).
 - Changing a table means changing `sqlite_provider.py` in the same commit;
-  `test_sqlite_provider.py` checks that the seed still matches the fixtures and the contract.
+  `test_sqlite_provider.py` checks that the seed still matches the catalog and the contract.
 - Bump `PRAGMA user_version` in `schema.sql` and `SCHEMA_VERSION` in `db.py` together when a
   column changes, so an old `app.db` is refused instead of misread.
 

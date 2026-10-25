@@ -64,15 +64,27 @@ def main() -> int:
     parser.add_argument("--db", default=str(ROOT / "backend" / "app.db"))
     parser.add_argument("--no-shopping", action="store_true", help="skip Google Shopping lookups")
     parser.add_argument("--dry-run", action="store_true", help="print the plan; make no calls")
+    parser.add_argument(
+        "--export",
+        action="store_true",
+        help="after the run, write backend/serp_cache.json (the committed offline snapshot)",
+    )
+    parser.add_argument(
+        "--export-only", action="store_true", help="only write the snapshot; search nothing"
+    )
     args = parser.parse_args()
+
+    conn = db.connect(args.db)
+    db.apply_schema(conn)
+    snapshot = ROOT / "backend" / "serp_cache.json"
+    if args.export_only:
+        print(f"exported {serp.export_cache(conn, snapshot)} cached queries to {snapshot}")
+        return 0
 
     key = os.environ.get("SERPAPI_API_KEY", "").strip()
     if not key and not args.dry_run:
         print("SERPAPI_API_KEY is not set. Put it in env.txt (see env.example.txt).")
         return 2
-
-    conn = db.connect(args.db)
-    db.apply_schema(conn)
     provider = SQLiteProjectDataProvider(lambda: conn)
     client = serp.SerpApiClient(key or "dry-run", lambda: conn, max_searches=args.max_searches)
     before = Counter(r["source"] for r in conn.execute("SELECT source FROM resources"))
@@ -113,6 +125,8 @@ def main() -> int:
         f"done: {client.calls} live searches this run | cache: {serp.cache_size(conn)} queries | "
         f"resources: {dict(after)} | materials with shop links: {shops}"
     )
+    if args.export:
+        print(f"exported {serp.export_cache(conn, snapshot)} cached queries to {snapshot}")
     return 0
 
 

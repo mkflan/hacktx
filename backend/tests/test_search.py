@@ -8,7 +8,7 @@ from fake_search import GOOGLE, SCHOLAR, SHOPPING, YOUTUBE
 
 import db
 from json_api.search import DisabledSearch, SearchError, offers_from, resources_from
-from serp import SerpApiClient, cache_size
+from serp import CacheOnlySearch, SerpApiClient, cache_size, export_cache, import_cache
 
 
 def test_youtube_results_become_tutorials_and_skip_bad_or_duplicate_links():
@@ -135,3 +135,79 @@ def test_cached_payload_round_trips_as_json():
     client.search("google_scholar", "soil")
     row = conn.execute("SELECT response_json FROM serp_cache").fetchone()
     assert json.loads(row[0]) == SCHOLAR
+
+
+# ---- offline replay: export, import, cache-only search --------------------------------------
+
+
+def test_export_trims_and_import_restores_the_cache(tmp_path):
+    conn = db.connect_memory(seed=False)
+    fat_youtube = {**YOUTUBE, "search_metadata": {"id": "x" * 500}, "search_parameters": {}}
+    client, _ = make_client(conn, {"youtube": (200, fat_youtube), "google": (200, GOOGLE)})
+    client.search("youtube", "soil tutorial")
+    client.search("google", "soil guide")
+    path = tmp_path / "serp_cache.json"
+    assert export_cache(conn, path) == 2
+    entries = json.loads(path.read_text(encoding="utf-8"))
+    youtube = next(e for e in entries if e["engine"] == "youtube")
+    assert "search_metadata" not in youtube["response"]
+    assert len(youtube["response"]["video_results"]) == len(YOUTUBE["video_results"])
+    # The trimmed payload converts exactly like the full one.
+    assert [r.url for r in resources_from("youtube", youtube["response"], id_prefix="w")] == [
+        r.url for r in resources_from("youtube", YOUTUBE, id_prefix="w")
+    ]
+
+    fresh = db.connect_memory(seed=False)
+    assert import_cache(fresh, path) == 2 and cache_size(fresh) == 2
+    cache_only = CacheOnlySearch(lambda: fresh)
+    assert cache_only.search("google", " soil  guide ") == {
+        "organic_results": GOOGLE["organic_results"]
+    }
+    with pytest.raises(SearchError, match="offline cache"):
+        cache_only.search("google", "never searched")
+
+
+def test_seeding_replays_the_snapshot_into_resources_and_shop_links(tmp_path, monkeypatch):
+    import seeding
+    from json_api.search import project_queries
+    from sqlite_provider import SQLiteProjectDataProvider
+
+    # Build a snapshot for project 7 (Smart Soil Moisture Monitor) from the canned payloads.
+    scratch = db.connect_memory()
+    project = SQLiteProjectDataProvider(lambda: scratch).get_project("7")
+    queries = project_queries(project)
+    for engine, payload in (("youtube", YOUTUBE), ("google", GOOGLE)):
+        scratch.execute(
+            "INSERT INTO serp_cache (engine, query, response_json) VALUES (?, ?, ?)",
+            (engine, queries[engine], json.dumps(payload)),
+        )
+    first_material = project.materials[0].name
+    scratch.execute(
+        "INSERT INTO serp_cache (engine, query, response_json) VALUES (?, ?, ?)",
+        ("google_shopping", first_material, json.dumps(SHOPPING)),
+    )
+    snapshot = tmp_path / "serp_cache.json"
+    export_cache(scratch, snapshot)
+
+    monkeypatch.setattr(seeding, "CACHE_SNAPSHOT", snapshot)
+    conn = db.connect_memory()  # seeds, then replays the snapshot
+    rebuilt = SQLiteProjectDataProvider(lambda: conn).get_project("7")
+    found = [r for r in rebuilt.resources if r.source != "authored"]
+    assert sorted(r.source for r in found) == [
+        "serpapi:google",
+        "serpapi:youtube",
+        "serpapi:youtube",
+    ]
+    assert rebuilt.materials[0].shop_url == "https://shop.example.com/soil-sensor"
+    assert (
+        rebuilt.materials[0].price_usd == 8.99
+        and rebuilt.materials[0].shop_source == "Example Shop"
+    )
+    # Other projects are untouched, and a second start changes nothing.
+    assert all(
+        r.source == "authored"
+        for r in SQLiteProjectDataProvider(lambda: conn).get_project("1").resources
+    )
+    before = conn.execute("SELECT COUNT(*) FROM resources").fetchone()[0]
+    db.apply_schema(conn)
+    assert conn.execute("SELECT COUNT(*) FROM resources").fetchone()[0] == before
