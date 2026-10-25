@@ -211,3 +211,27 @@ def test_seeding_replays_the_snapshot_into_resources_and_shop_links(tmp_path, mo
     before = conn.execute("SELECT COUNT(*) FROM resources").fetchone()[0]
     db.apply_schema(conn)
     assert conn.execute("SELECT COUNT(*) FROM resources").fetchone()[0] == before
+
+
+def test_client_reports_the_account_balance_without_spending_a_search():
+    conn = db.connect_memory(seed=False)
+    seen = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        assert request.url.path == "/account.json" and request.url.params["api_key"] == "k"
+        return httpx.Response(
+            200, json={"plan_searches_left": 89, "extra_credits": 1000, "this_month_usage": 161}
+        )
+
+    http = httpx.Client(transport=httpx.MockTransport(handler))
+    client = SerpApiClient("k", lambda: conn, http=http)
+    assert client.account() == {"searches_left": 1089, "plan_searches_left": 89, "used": 161}
+    assert client.calls == 0 and len(seen) == 1
+
+
+def test_account_balance_failure_is_a_search_error():
+    conn = db.connect_memory(seed=False)
+    http = httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(401, json={})))
+    with pytest.raises(SearchError, match="HTTP 401"):
+        SerpApiClient("k", lambda: conn, http=http).account()

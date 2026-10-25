@@ -1,7 +1,7 @@
 """Fill the catalog with real web resources and shop links through SerpApi, inside a budget.
 
 Run from the repo root with the venv:
-    .venv\\Scripts\\python scripts\\enrich_catalog.py --max-searches 80
+    .venv\\Scripts\\python scripts\\enrich_catalog.py --max-searches 20
     .venv\\Scripts\\python scripts\\enrich_catalog.py --dry-run          # show the plan, no calls
 
 Order: the projects recommended to the two demo students come first, so the pages the judges
@@ -9,6 +9,10 @@ see are the richest; then every other project by id. Per project: YouTube tutori
 documentation search, Google Scholar for intermediate and advanced projects, and one Google
 Shopping lookup for the first purchasable material. Every answer is cached in serp_cache, so
 re-running never pays for the same query twice; stop and restart whenever you like.
+
+Cost: up to 4 SerpApi searches per project that is not cached yet (YouTube, Google, Scholar
+for non-beginner projects, one Shopping lookup). The run prints the account balance first and
+never spends more than --max-searches (default 20). Use --dry-run to see the plan for free.
 """
 
 import argparse
@@ -59,7 +63,7 @@ def main() -> int:
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument(
-        "--max-searches", type=int, default=80, help="live SerpApi calls allowed in this run"
+        "--max-searches", type=int, default=20, help="live SerpApi calls allowed in this run"
     )
     parser.add_argument("--db", default=str(ROOT / "backend" / "app.db"))
     parser.add_argument("--no-shopping", action="store_true", help="skip Google Shopping lookups")
@@ -89,6 +93,15 @@ def main() -> int:
     client = serp.SerpApiClient(key or "dry-run", lambda: conn, max_searches=args.max_searches)
     before = Counter(r["source"] for r in conn.execute("SELECT source FROM resources"))
     print(f"cache: {serp.cache_size(conn)} queries | resources before: {dict(before)}")
+    if not args.dry_run:
+        try:
+            balance = client.account()
+            print(
+                f"SerpApi: {balance['searches_left']} searches left "
+                f"({balance['used']} used this month); this run spends at most {args.max_searches}"
+            )
+        except SearchError as exc:
+            print(f"SerpApi balance unknown: {exc.message}")
 
     for project in priority_order(provider):
         engines = engines_for(project)

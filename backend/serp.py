@@ -13,6 +13,7 @@ from json_api.search import ENGINES, SearchError, clean_query
 
 logger = logging.getLogger("serp")
 BASE_URL = "https://serpapi.com/search.json"
+ACCOUNT_URL = "https://serpapi.com/account.json"
 DEFAULT_TIMEOUT = 25.0
 
 
@@ -45,6 +46,26 @@ class SerpApiClient:
             .fetchone()
         )
         return None if row is None else json.loads(row[0])
+
+    def account(self) -> dict:
+        """Searches left on the plan. SerpApi does not count this call as a search.
+        Returns {searches_left (plan + extra credits), plan_searches_left, used (this month)}."""
+        try:
+            response = self._http.get(ACCOUNT_URL, params={"api_key": self._key})
+        except httpx.HTTPError as exc:
+            raise SearchError(f"Could not reach SerpApi ({type(exc).__name__}).") from exc
+        if response.status_code != 200:
+            raise SearchError(f"SerpApi answered HTTP {response.status_code}.")
+        data = response.json()
+        plan_left = int(data.get("plan_searches_left") or 0)
+        total_left = data.get("total_searches_left")
+        if total_left is None:
+            total_left = plan_left + int(data.get("extra_credits") or 0)
+        return {
+            "searches_left": int(total_left),
+            "plan_searches_left": plan_left,
+            "used": int(data.get("this_month_usage") or 0),
+        }
 
     def search(self, engine: str, query: str) -> dict:
         if engine not in ENGINES:
