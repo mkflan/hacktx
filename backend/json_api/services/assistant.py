@@ -189,7 +189,7 @@ def reply(ctx: AppContext, user_id: str, req: AssistantRequest) -> dict:
         "cited_sources": cited,
         "web_results": web,
         "generation_mode": llm.mode,
-        "model": llm.model_id,
+        "model": getattr(llm, "last_model", llm.model_id),  # the model that actually answered
         "data_source": ctx.data_source,
         "persisted": False,
         "warnings": notices,

@@ -31,9 +31,10 @@
 
 ## If something fails
 
-- Gemini 503 "high demand" or a timeout: say "the model is busy", retry once. The project page,
-  shelves and forum never depend on Gemini. If it keeps failing, set `GEMINI_MODEL=gemini-3.8-flash`
-  or `gemini-2.5-flash` in `.env` and restart.
+- Gemini 503 "high demand" or a timeout: the app already retries once on
+  `GEMINI_FALLBACK_MODEL` (gemini-2.5-flash) and the reply footer shows which model answered.
+  If both fail, say "the model is busy" and retry; the project page, shelves and forum never
+  depend on Gemini. If it keeps failing, change `GEMINI_MODEL` in `.env` and restart.
 - SerpApi quota gone: everything already dug up still shows; "Dig deeper" reports the failure
   honestly and the chat answers from supplied sources.
 - Offline entirely: `LLM_MODE=mock` in `.env` gives deterministic mentor replies labeled "mock";

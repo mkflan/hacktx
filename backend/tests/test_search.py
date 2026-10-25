@@ -190,7 +190,7 @@ def test_seeding_replays_the_snapshot_into_resources_and_shop_links(tmp_path, mo
     export_cache(scratch, snapshot)
 
     monkeypatch.setattr(seeding, "CACHE_SNAPSHOT", snapshot)
-    conn = db.connect_memory()  # seeds, then replays the snapshot
+    conn = db.connect_memory(replay=True)  # seeds, then replays the snapshot (as app.py does)
     rebuilt = SQLiteProjectDataProvider(lambda: conn).get_project("7")
     found = [r for r in rebuilt.resources if r.source != "authored"]
     assert sorted(r.source for r in found) == [

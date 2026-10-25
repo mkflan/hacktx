@@ -29,9 +29,10 @@ def close_db(e=None):
         db.close()
 
 
-def apply_schema(db, seed=True):
+def apply_schema(db, seed=True, replay=False):
     """Create the tables (and the demo rows) on any connection. Refuses an older app.db
-    instead of silently running new queries against old tables."""
+    instead of silently running new queries against old tables. replay=True also rebuilds
+    the SerpApi-found resources from backend/serp_cache.json (the app does; tests do not)."""
     version = db.execute("PRAGMA user_version").fetchone()[0]
     has_tables = db.execute(
         "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'users'"
@@ -45,24 +46,30 @@ def apply_schema(db, seed=True):
     if seed:
         import seeding  # local import: seeding pulls in the whole authored catalog
 
-        seeding.seed_all(db)
+        seeding.seed_all(db, replay=replay)
     db.commit()
 
 
-def connect_memory(seed=True):
+def connect_memory(seed=True, replay=False):
     """A private in-memory database with the schema (and demo rows). For tests and demos."""
     db = connect(":memory:")
-    apply_schema(db, seed=seed)
+    apply_schema(db, seed=seed, replay=replay)
     return db
 
 
 def init_db():
-    apply_schema(get_db(), seed=current_app.config["SEED_DEMO_DATA"])
+    apply_schema(
+        get_db(),
+        seed=current_app.config["SEED_DEMO_DATA"],
+        replay=current_app.config["REPLAY_SEARCH_CACHE"],
+    )
 
 
 def init_app(app):
     app.config.setdefault("DATABASE", str(DATABASE_PATH))
     app.config.setdefault("SEED_DEMO_DATA", True)
+    # The committed SerpApi snapshot is replayed for the real app, never under TESTING.
+    app.config.setdefault("REPLAY_SEARCH_CACHE", not app.config.get("TESTING", False))
     app.teardown_appcontext(close_db)
 
     with app.app_context():

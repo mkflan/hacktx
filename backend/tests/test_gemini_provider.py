@@ -21,6 +21,7 @@ from json_api.llm.schemas import ProjectPlanDraft
 from json_api.services.resources import build_resource_bank
 
 SETTINGS = Settings(llm_mode="gemini", gemini_api_key="test-key-not-real")
+NO_FALLBACK = Settings(llm_mode="gemini", gemini_api_key="k", gemini_fallback_model="")
 BANK = build_resource_bank(FIXTURE_PROJECTS, ["soil sensor plants"])
 
 
@@ -76,6 +77,52 @@ def test_requires_explicit_api_key():
 def test_real_client_builds_without_network():
     real = GeminiLLMProvider(SETTINGS)
     assert real.model_id == "gemini-3.6-flash"
+
+
+def server_error(code=503):
+    return genai_errors.ServerError(code, {"error": {"message": "high demand", "status": "X"}})
+
+
+def test_unavailable_main_model_falls_back_once():
+    llm, messages = provider([server_error(), reply(valid_plan())])
+    draft = llm.elaborate_idea(ALEX, None, "soil sensor", BANK)
+    assert isinstance(draft, ProjectPlanDraft)
+    assert [r["model"] for r in messages.requests] == ["gemini-3.6-flash", "gemini-2.5-flash"]
+    assert llm.last_model == "gemini-2.5-flash" and llm.model_id == "gemini-3.6-flash"
+    # thinking_level is a Gemini 3 setting; the 2.5 fallback gets the config without it.
+    assert messages.requests[0]["config"].thinking_config.thinking_level is not None
+    assert messages.requests[1]["config"].thinking_config is None
+    assert messages.requests[1]["config"].response_json_schema is not None
+
+
+def test_fallback_failing_too_raises_the_fallbacks_error():
+    llm, messages = provider([server_error(), server_error(504)])
+    with pytest.raises(AppError) as exc:
+        llm.chat("system", [("user", "hi")])
+    assert exc.value.code == "LLM_TIMEOUT" and len(messages.requests) == 2
+
+
+def test_no_fallback_for_bad_requests_or_when_disabled():
+    llm, messages = provider([api_error(400)])
+    with pytest.raises(AppError) as exc:
+        llm.chat("system", [("user", "hi")])
+    assert exc.value.code == "LLM_REQUEST_REJECTED" and len(messages.requests) == 1
+
+    settings = Settings(llm_mode="gemini", gemini_api_key="k", gemini_fallback_model="")
+    llm, messages = provider([server_error()], settings)
+    with pytest.raises(AppError) as exc:
+        llm.chat("system", [("user", "hi")])
+    assert exc.value.code == "LLM_UNAVAILABLE" and len(messages.requests) == 1
+
+
+def test_chat_sends_turns_as_user_and_model_contents():
+    llm, messages = provider([reply("Start with the wiring.")])
+    text = llm.chat("be brief", [("user", "hi"), ("assistant", "hello"), ("user", "how?")])
+    assert text == "Start with the wiring."
+    sent = messages.requests[0]
+    assert [c.role for c in sent["contents"]] == ["user", "model", "user"]
+    assert sent["config"].system_instruction == "be brief"
+    assert sent["config"].response_mime_type is None  # plain text, no schema
 
 
 def test_valid_output_needs_one_call_with_structured_output_request():
@@ -151,7 +198,7 @@ def test_refusal_is_502_without_retry():
     ],
 )
 def test_provider_errors_map_to_503(error, code, retryable):
-    llm, messages = provider([error])
+    llm, messages = provider([error], NO_FALLBACK)  # mapping only; the fallback has its own tests
     with pytest.raises(AppError) as exc:
         llm.generate_ideas(ALEX, None, None, BANK)
     assert (exc.value.status, exc.value.code, exc.value.retryable) == (503, code, retryable)

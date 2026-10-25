@@ -70,6 +70,7 @@ Tests and lint, from the repo root:
 | `LLM_MODE` | `mock`, `gemini` | `mock` | `mock` is a deterministic offline mentor labeled `generation_mode: "mock"`. |
 | `GEMINI_API_KEY` | key | none | Required for `LLM_MODE=gemini`. Server-side only. |
 | `GEMINI_MODEL` | model ID | `gemini-3.6-flash` | 3.8 Flash was overloaded on every live call during the hackathon. |
+| `GEMINI_FALLBACK_MODEL` | model ID or empty | `gemini-2.5-flash` | Tried once when the main model is unavailable, rate limited or times out. Responses report which model answered. |
 | `GEMINI_THINKING` | `minimal`..`high` | `medium` | Lower is faster. |
 | `SERPAPI_API_KEY` | key | none | Enables "Dig deeper", starter sources and the enrichment script. Without it the catalog still works from the authored seed and the cache snapshot. |
 | `LLM_DEADLINE_SECONDS` | 5-300 | `45` | Total budget per generation, including the one correction retry. |

@@ -233,10 +233,11 @@ def seed_search_cache(conn: sqlite3.Connection) -> int:
     return touched
 
 
-def seed_all(conn: sqlite3.Connection) -> None:
+def seed_all(conn: sqlite3.Connection, replay: bool = False) -> None:
     seed_users(conn)
     seed_projects(conn)
     seed_forum(conn)
     seed_starters(conn)
     conn.commit()
-    seed_search_cache(conn)
+    if replay:
+        seed_search_cache(conn)

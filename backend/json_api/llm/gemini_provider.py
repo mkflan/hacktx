@@ -28,6 +28,8 @@ logger = logging.getLogger("json_api")
 
 MIN_SECONDS_FOR_CORRECTION = 8.0
 CHAT_MAX_TOKENS = 2048
+# Failures worth one retry on the fallback model. Bad requests, refusals and auth are not.
+FALLBACK_CODES = frozenset({"LLM_UNAVAILABLE", "LLM_RATE_LIMITED", "LLM_TIMEOUT"})
 _REFUSAL_FINISH_REASONS = frozenset(
     {"SAFETY", "BLOCKLIST", "PROHIBITED_CONTENT", "SPII", "RECITATION"}
 )
@@ -87,6 +89,7 @@ class GeminiLLMProvider:
         self._client = client
         self._settings = settings
         self.model_id = settings.gemini_model
+        self.last_model = settings.gemini_model  # which model answered the latest call
 
     # ---- public actions ---------------------------------------------------------------------
 
@@ -227,10 +230,30 @@ class GeminiLLMProvider:
     def _generate(
         self, contents: Any, config: types.GenerateContentConfig
     ) -> tuple[str, str | None]:
-        """Call the model once; map provider failures and refusals to AppError."""
+        """Call the main model, or the fallback model once when the main one is unavailable;
+        map provider failures and refusals to AppError."""
+        models = [self._settings.gemini_model]
+        fallback = self._settings.gemini_fallback_model
+        if fallback and fallback != models[0]:
+            models.append(fallback)
+        for index, model in enumerate(models):
+            try:
+                response = self._call(model, contents, _config_for(model, config))
+            except AppError as exc:
+                if index == len(models) - 1 or exc.code not in FALLBACK_CODES:
+                    raise
+                logger.warning(
+                    "Model %s failed (%s); trying fallback %s", model, exc.code, models[index + 1]
+                )
+                continue
+            self.last_model = model
+            return self._read(response)
+        raise AssertionError("unreachable")  # pragma: no cover
+
+    def _call(self, model: str, contents: Any, config: types.GenerateContentConfig) -> Any:
         try:
-            response = self._client.models.generate_content(
-                model=self._settings.gemini_model, contents=contents, config=config
+            return self._client.models.generate_content(
+                model=model, contents=contents, config=config
             )
         except httpx.TimeoutException as exc:
             raise AppError(
@@ -243,6 +266,9 @@ class GeminiLLMProvider:
         except genai_errors.APIError as exc:
             raise _map_api_error(exc) from exc
 
+    @staticmethod
+    def _read(response: Any) -> tuple[str, str | None]:
+        """(text, finish_reason) from a response; refusals become AppError."""
         feedback = getattr(response, "prompt_feedback", None)
         if feedback is not None and getattr(feedback, "block_reason", None):
             raise AppError("LLM_REFUSED", "The model declined this request.", 502)
@@ -253,6 +279,14 @@ class GeminiLLMProvider:
         parts = (candidate.content.parts or []) if candidate and candidate.content else []
         text = "".join(p.text for p in parts if p.text and not p.thought)
         return text, finish
+
+
+def _config_for(model: str, config: types.GenerateContentConfig) -> types.GenerateContentConfig:
+    """thinking_level exists on Gemini 3 and later only; older fallback models reject it."""
+    generation = model.split("-")[1] if model.startswith("gemini-") and "-" in model else ""
+    if generation[:1].isdigit() and float(generation.split(".")[0]) >= 3:
+        return config
+    return config.model_copy(update={"thinking_config": None})
 
 
 def _finish_reason(candidate: Any) -> str | None:
@@ -281,7 +315,7 @@ def _map_api_error(exc: genai_errors.APIError) -> AppError:
         return AppError(
             "LLM_UNAVAILABLE", "The model provider is unavailable.", 503, retryable=True
         )
-    logger.warning("Model request rejected: status=%s", code)
+    logger.warning("Model request rejected: status=%s message=%s", code, message[:300])
     return AppError("LLM_REQUEST_REJECTED", "The model provider rejected the request.", 502)
 
 
