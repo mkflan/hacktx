@@ -18,7 +18,7 @@ folder layout, small commits, secrets in `env.txt`, and handoffs.
 - Do not create or edit SQLite schema, queries, migrations, seeds, `db.py`, `schema.sql` or
   database files. Do not import `sqlite3`/ORMs in `backend/json_api/`.
 - Data reaches the app only through `ProjectDataProvider` (4 read methods) injected via
-  `init_app()` / `create_app()`. See docs/INTEGRATION.md.
+  `init_json_api()` / `create_app()`. See docs/INTEGRATION.md.
 
 ## Commands
 - Tests: `.venv\Scripts\python -m pytest` (repo root). Lint: `.venv\Scripts\ruff check backend`.

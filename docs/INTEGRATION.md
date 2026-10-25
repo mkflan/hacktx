@@ -14,8 +14,8 @@ Two separate pieces live in `backend/`. They are connected in one place (`app.py
 | `docs/INTEGRATION.md` | This file | Both |
 | `docs/TODO.md` | Task status | Both |
 
-How they connect: `app.py` does `from json_api import init_app` and calls
-`init_app(app, data_provider=...)` to add the `/api/...` routes to the Flask app. For pages that
+How they connect: `app.py` does `from json_api import init_json_api` and calls
+`init_json_api(app, data_provider=...)` to add the `/api/...` routes to the Flask app. For pages that
 arrive already populated, `app.py` can also call the functions in `json_api.services` directly
 inside a page route instead of going through HTTP. Until `app.py` is wired up, only its own routes
 exist; run the JSON API on its own with `python -m json_api` (from `backend/`).
@@ -59,13 +59,13 @@ class ProjectDataProvider(Protocol):
 Your Flask app (`backend/app.py` on the `backend` branch) can mount everything with one call:
 
 ```python
-from json_api import init_app
+from json_api import init_json_api
 from your_module import YourProjectDataProvider   # your code, your queries
 
-init_app(app, data_provider=YourProjectDataProvider())
+init_json_api(app, data_provider=YourProjectDataProvider())
 ```
 
-`init_app` registers the routes, error handlers and CORS on your existing app. Because routes
+`init_json_api` registers the routes, error handlers and CORS on your existing app. Because routes
 run inside a Flask request, your `db.get_db()` (which uses `g` and `current_app`) works inside
 the provider methods. Standalone, `create_app(data_provider=..., llm_provider=...)` does the
 same with a new Flask app. With `DATA_MODE=injected` and no provider passed, the data routes

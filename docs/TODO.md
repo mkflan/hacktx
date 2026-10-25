@@ -11,7 +11,7 @@ Owners: **App** = application/backend logic (branch `backend-w/o-database`),
 - [x] Repo setup: `.gitignore`, `requirements.txt` (pinned), `env.example.txt`, `pyproject.toml`
       (pytest + ruff), `.vscode/` settings, `.claude/settings.json`, project `CLAUDE.md`
 - [x] Data contract: DTOs + 4-method `ProjectDataProvider` ([contracts.py](../backend/json_api/contracts.py))
-- [x] One injection seam: `create_app()` / `init_app()` ([main.py](../backend/json_api/main.py))
+- [x] One injection seam: `create_app()` / `init_json_api()` ([main.py](../backend/json_api/main.py))
 - [x] In-memory fixtures: Alex, Maya, 10 projects incl. weeks-only, unknown difficulty, no resources
 - [x] Explore: filters (AND, aliases, word matching), stable pagination, grouping, facets, details
 - [x] Recommendations: explainable score, time-fit rules, optional skill/goal preferences
@@ -35,7 +35,7 @@ Owners: **App** = application/backend logic (branch `backend-w/o-database`),
 - [ ] **DB** Add a time commitment column for users and timeline + resources for projects
 - [ ] **DB** Write a `ProjectDataProvider` implementation over SQLite (your module, your queries)
 - [ ] **DB** Persist the two demo users (Alex, Maya) and some projects with your own IDs
-- [ ] **Team** Call `init_app(app, data_provider=...)` from the Flask app in `backend/app.py`
+- [ ] **Team** Call `init_json_api(app, data_provider=...)` from the Flask app in `backend/app.py`
 - [ ] **Team** Merge `backend-w/o-database` with `backend` (no overlapping files today)
 - [ ] **App** Re-run the test suite plus a smoke test against the real provider once it exists
 

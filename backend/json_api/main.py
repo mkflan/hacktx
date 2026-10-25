@@ -1,7 +1,7 @@
 """App factory and registration seam.
 
 Standalone:     create_app(data_provider=..., llm_provider=...)
-Teammate's app: init_app(existing_flask_app, data_provider=TheirProvider())
+Teammate's app: init_json_api(existing_flask_app, data_provider=TheirProvider())
 """
 
 import logging
@@ -48,7 +48,7 @@ def _resolve_llm(
         return None, "LLM_MODE=anthropic but ANTHROPIC_API_KEY is not set on the server."
 
 
-def init_app(
+def init_json_api(
     app: Flask,
     *,
     data_provider: ProjectDataProvider | None = None,
@@ -101,4 +101,6 @@ def create_app(
     settings: Settings | None = None,
 ) -> Flask:
     app = Flask(__name__)
-    return init_app(app, data_provider=data_provider, llm_provider=llm_provider, settings=settings)
+    return init_json_api(
+        app, data_provider=data_provider, llm_provider=llm_provider, settings=settings
+    )

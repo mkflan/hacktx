@@ -77,7 +77,7 @@ class AppContext:
         if self.data_provider is None:
             raise AppError(
                 "DATA_PROVIDER_NOT_CONFIGURED",
-                "DATA_MODE=injected but no data provider was registered with init_app().",
+                "DATA_MODE=injected but no data provider was registered with init_json_api().",
                 503,
             )
         return SafeDataProvider(self.data_provider)

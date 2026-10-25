@@ -23,7 +23,7 @@ tracked in [TODO.md](docs/TODO.md).
 
 ```
 backend/json_api/        application package (Flask + Pydantic v2)
-  main.py                  create_app() / init_app(): the one place providers are injected
+  main.py                  create_app() / init_json_api(): the one place providers are injected
   contracts.py             DTOs + ProjectDataProvider (4 read-only methods)
   dependencies.py          provider access, 503 wrapping for data failures
   api/routes.py, schemas.py
@@ -61,7 +61,7 @@ gitignored; copy `env.example.txt`).
 
 | Variable | Values | Default | Meaning |
 |---|---|---|---|
-| `DATA_MODE` | `fake`, `injected` | `fake` | `fake` uses the in-memory fixtures. `injected` needs a provider passed to `init_app()`; without one every data route returns `503 DATA_PROVIDER_NOT_CONFIGURED`. It never falls back to fake data. |
+| `DATA_MODE` | `fake`, `injected` | `fake` | `fake` uses the in-memory fixtures. `injected` needs a provider passed to `init_json_api()`; without one every data route returns `503 DATA_PROVIDER_NOT_CONFIGURED`. It never falls back to fake data. |
 | `LLM_MODE` | `mock`, `anthropic` | `mock` | `mock` is a deterministic offline generator labeled `generation_mode: "mock"`. `anthropic` calls Claude. |
 | `ANTHROPIC_API_KEY` | key | none | Required for `LLM_MODE=anthropic`. Server-side only, never sent to the browser. A Claude Code login does not count. |
 | `ANTHROPIC_MODEL` | model ID | `claude-opus-5-5` | |
