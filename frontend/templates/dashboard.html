@@ -1,138 +1,64 @@
 {% extends "base.html" %}
+{% from "_macros.html" import sky, shelf %}
 
-{% block title %}{{ user.username }}'s Dashboard: HackTX Research Hub{% endblock %}
+{% block title %}{{ user.username }}'s Rabbit Hole: Research Rabbit{% endblock %}
 
 {#
-  Context from display_user_dashboard() in backend/app.py:
-    user             {id, username, major, interests[], time_commitment{raw, amount, unit, ...}}
-    recommendations  list of {project{...}, score, matched_majors[], matched_interests[],
-                              time_fit{status, explanation, ...}, reasons[], warnings[]}
-    warnings         list of {code, message}
-    data_source      "sqlite", "fake", ...
+  Context from pages._dashboard_for():
+    user      {id, username, major, interests[], time_commitment{raw, ...}, skill_level}
+    rows      [{key, title, subtitle, cards[{id, name, description, associated_majors[],
+               interests[], difficulty, timeframe, hours, score?, reasons?}]}]
+    warnings  [{code, message}]
+    welcome   "new" | "back" | None
 #}
 
-{% macro time_text(t) -%}
-    {%- if t.raw -%}{{ t.raw }}
-    {%- elif t.amount is not none and t.unit != "unknown" -%}{{ "%g"|format(t.amount) }} {{ t.unit|replace("_", " ") }}
-    {%- else -%}Unknown{%- endif -%}
-{%- endmacro %}
-
 {% block content %}
-        <!--sky-->
-        <header class="relative w-full min-h-[360px] bg-blue px-6 py-16 flex flex-col justify-center items-center text-center overflow-hidden">
+        {% call sky("Welcome" ~ (" back" if welcome != "new" else "") ~ ", " ~ user.username, None, "min-h-[300px]") %}
+            <p class="font-magical text-base sm:text-lg font-semibold text-slate-700 max-w-xl">
+                {{ user.major or "Major not set" }}
+                &middot; {{ user.time_commitment.raw or "time unknown" }}
+                &middot; {{ user.skill_level or "any difficulty" }}
+            </p>
+            {% if user.interests %}
+            <ul class="flex flex-wrap justify-center gap-2 pt-1">
+                {% for interest in user.interests %}
+                <li class="font-magical text-xs tracking-wide bg-cream/90 border border-purple-300/60 rounded-full px-3 py-1 text-slate-800">{{ interest }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        {% endcall %}
 
-            <!-- Fluffy Multi-Blob Paper-Cut Clouds -->
-            <div class="absolute top-8 left-12 w-52 h-20 bg-pink/70 rounded-full blur-[0.5px] opacity-90 pointer-events-none">
-                <div class="absolute -top-4 left-6 w-24 h-20 bg-pink/80 rounded-full"></div>
-                <div class="absolute -top-6 right-8 w-28 h-24 bg-pink/70 rounded-full"></div>
-            </div>
-
-            <div class="absolute top-16 right-16 w-64 h-24 bg-cream/90 rounded-full blur-[0.5px] opacity-95 pointer-events-none">
-                <div class="absolute -top-6 left-8 w-28 h-24 bg-cream/90 rounded-full"></div>
-                <div class="absolute -top-4 right-6 w-24 h-20 bg-cream/80 rounded-full"></div>
-            </div>
-
-            <!-- Sky Content Wrapper -->
-            <div class="relative z-20 max-w-3xl mx-auto flex flex-col items-center justify-center space-y-4">
-                <h1 class="text-4xl md:text-6xl font-black tracking-normal leading-tight text-slate-900 drop-shadow-sm">
-                    Welcome back, {{ user.username }}
-                </h1>
-                <p class="font-magical text-base sm:text-lg font-semibold text-slate-700 max-w-xl">
-                    {% if user.major %}{{ user.major }}{% else %}Major not set{% endif %}
-                    &middot; Time: {{ time_text(user.time_commitment) }}
-                </p>
-                {% if user.interests %}
-                <ul class="flex flex-wrap justify-center gap-2 pt-2">
-                    {% for interest in user.interests %}
-                    <li class="font-magical text-xs tracking-wide bg-cream/90 border border-purple-300/60 rounded-full px-3 py-1 text-slate-800">{{ interest }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-            </div>
-        </header>
-
-        <section class="relative w-full">
-            <div class="relative w-full">
-            <!-- Midground Grass Layer -->
-            <div class="absolute bottom-0 left-0 w-full h-24 bg-[#5c7c65] shadow-inner pointer-events-none"
-                 style="clip-path: polygon(0% 30%, 5% 10%, 10% 25%, 15% 5%, 20% 30%, 25% 10%, 30% 35%, 35% 10%, 40% 30%, 45% 5%, 50% 25%, 55% 10%, 60% 20%, 65% 5%, 70% 30%, 75% 10%, 80% 35%, 85% 15%, 90% 30%, 95% 5%, 100% 25%, 100% 100%, 0% 100%);">
-            </div>
-        </div>
-        </section>
-
-        <!-- UNDERGROUND DIRT SECTION: RECOMMENDED PROJECTS -->
-        <section class="relative w-full bg-dirt px-4 pt-16 pb-32 border-t-4 border-[#180e0a] min-h-[500px]">
-
-            <div class="relative max-w-5xl mx-auto z-20 text-cream">
+        <!-- UNDERGROUND: THE SHELVES -->
+        <section class="relative w-full bg-dirt px-4 pt-14 pb-32 border-t-4 border-[#180e0a] min-h-[600px]">
+            <div class="relative max-w-6xl mx-auto z-20 text-cream">
 
                 {% if data_source == "fake" %}
-                <p class="font-magical text-xs text-[#d4af37] border border-[#d4af37] rounded px-4 py-2 mb-6 text-center">
+                <p class="font-magical text-xs text-gold border border-gold rounded px-4 py-2 mb-6 text-center">
                     Demo data: these users and projects are fictional fixtures, not the real database.
                 </p>
                 {% endif %}
 
-                <h2 class="font-mystical text-lg md:text-2xl text-[#d4af37] uppercase tracking-wider font-bold mb-2">
-                    Projects down your rabbit hole
-                </h2>
-                <p class="font-magical text-xs text-gray-400 tracking-wide mb-8">
-                    Ranked by how well each project matches your major, interests and time.
+                {% if welcome == "new" %}
+                <p class="font-magical text-sm text-cream/90 border border-moss bg-panel rounded px-4 py-3 mb-8">
+                    Your profile is sealed. The top shelf is ranked for you; scroll down for every project by major, interest, difficulty and timeframe. Open any card for the full guide, or ask the Caterpillar for help.
                 </p>
-
-                {% if recommendations %}
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {% for rec in recommendations %}
-                    {% set project = rec.project %}
-                    <article class="flex flex-col bg-[#0d1412] border-2 border-[#2c4238] hover:border-[#d4af37] transition-colors rounded-md p-6 shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
-
-                        <div class="flex items-start justify-between gap-3 mb-3">
-                            <h3 class="font-mystical text-sm text-[#d4af37] uppercase tracking-wider font-bold">{{ project.name }}</h3>
-                            <span class="font-magical text-xs text-cream bg-[#1a2923] border border-[#d4af37] rounded px-2 py-1 whitespace-nowrap" title="Heuristic score, not a guarantee of fit">
-                                {{ "%g"|format(rec.score) }}
-                            </span>
-                        </div>
-
-                        {% if project.description %}
-                        <p class="font-magical text-xs text-gray-300 leading-relaxed mb-4">{{ project.description }}</p>
-                        {% endif %}
-
-                        <dl class="font-magical text-xs text-gray-400 space-y-1 mb-4">
-                            <div class="flex gap-2"><dt class="text-[#d4af37]">Time:</dt><dd>{{ time_text(project.timeline) }}</dd></div>
-                            <div class="flex gap-2"><dt class="text-[#d4af37]">Difficulty:</dt><dd>{{ project.difficulty|capitalize if project.difficulty else "Unknown" }}</dd></div>
-                            <div class="flex gap-2"><dt class="text-[#d4af37]">Resources:</dt><dd>{{ project.resource_count }}</dd></div>
-                        </dl>
-
-                        {% if project.interests %}
-                        <ul class="flex flex-wrap gap-2 mb-4">
-                            {% for tag in project.interests %}
-                            <li class="font-magical text-[10px] tracking-wide rounded-full px-2 py-0.5 border
-                                {{ 'border-[#d4af37] text-[#d4af37]' if tag in rec.matched_interests else 'border-[#2c4238] text-gray-400' }}">{{ tag }}</li>
-                            {% endfor %}
-                        </ul>
-                        {% endif %}
-
-                        {% if rec.reasons %}
-                        <ul class="font-magical text-xs text-cream/90 list-disc pl-4 space-y-1 mb-4">
-                            {% for reason in rec.reasons %}<li>{{ reason }}</li>{% endfor %}
-                        </ul>
-                        {% endif %}
-
-                        {% if rec.warnings %}
-                        <ul class="font-magical text-[11px] text-gray-500 space-y-1 mt-auto pt-3 border-t border-[#2c4238]">
-                            {% for note in rec.warnings %}<li>&#9888; {{ note.message }}</li>{% endfor %}
-                        </ul>
-                        {% endif %}
-                    </article>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <div class="bg-[#0d1412] border-2 border-[#2c4238] rounded-md p-8 text-center font-magical text-sm text-gray-300">
-                    No projects matched your major or interests yet.
-                    Try the Generator, or add more interests to your profile.
-                </div>
                 {% endif %}
 
+                {% for row in rows %}
+                    {% if row.key == "recommended" and not row.cards %}
+                    <section class="mb-10">
+                        <h2 class="font-mystical text-sm md:text-lg text-gold uppercase tracking-wider font-bold mb-2">{{ row.title }}</h2>
+                        <div class="bg-panel border-2 border-moss rounded-md p-6 font-magical text-sm text-gray-300">
+                            Nothing matched your major and interests inside your time and difficulty yet. The shelves below show everything; the Caterpillar can also turn your own idea into a project.
+                        </div>
+                    </section>
+                    {% else %}
+                    {{ shelf(row, user.interests) }}
+                    {% endif %}
+                {% endfor %}
+
                 {% if warnings %}
-                <details class="mt-8 font-magical text-xs text-gray-500">
+                <details class="mt-4 font-magical text-xs text-gray-500">
                     <summary class="cursor-pointer hover:text-gray-300">About these results</summary>
                     <ul class="mt-2 space-y-1 list-disc pl-5">
                         {% for note in warnings %}<li>{{ note.message }}</li>{% endfor %}

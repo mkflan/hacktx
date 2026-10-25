@@ -1,49 +1,22 @@
 {% extends "base.html" %}
+{% from "_macros.html" import sky %}
 
-{% block title %}HackTX: The Rabbit Hole Research Hub{% endblock %}
+{% block title %}Research Rabbit: The Rabbit Hole Research Hub{% endblock %}
 
 {% block content %}
-        <!--sky-->
-        <header class="relative w-full min-h-[500px] bg-blue px-6 py-20 flex flex-col justify-center items-center text-center overflow-hidden">
-            
-            <!-- Fluffy Multi-Blob Paper-Cut Clouds -->
-            <div class="absolute top-8 left-12 w-52 h-20 bg-pink/70 rounded-full blur-[0.5px] opacity-90 pointer-events-none">
-                <div class="absolute -top-4 left-6 w-24 h-20 bg-pink/80 rounded-full"></div>
-                <div class="absolute -top-6 right-8 w-28 h-24 bg-pink/70 rounded-full"></div>
+        {% call sky("Join the Research Renaissance", "Dive down the rabbit hole! Tell us your major, your interests and your time, and we will dig up a project that fits.", "min-h-[460px]") %}
+            <div class="flex flex-wrap gap-3 justify-center pt-4">
+                {% if current_user %}
+                <a href="/dashboard" class="btn-gold">Open my Rabbit Hole</a>
+                <button type="button" onclick="openInterestModal()" class="font-magical text-sm font-semibold text-slate-800 bg-cream/90 border border-purple-300/60 rounded px-5 py-3 hover:bg-white">Start a new profile</button>
+                {% else %}
+                <button type="button" onclick="openInterestModal()" class="btn-gold">Create your profile</button>
+                {% endif %}
             </div>
-
-            <div class="absolute top-16 right-16 w-64 h-24 bg-cream/90 rounded-full blur-[0.5px] opacity-95 pointer-events-none">
-                <div class="absolute -top-6 left-8 w-28 h-24 bg-cream/90 rounded-full"></div>
-                <div class="absolute -top-4 right-6 w-24 h-20 bg-cream/80 rounded-full"></div>
-            </div>
-
-            <!-- Sky Content Wrapper -->
-            <div class="relative z-20 max-w-3xl mx-auto flex flex-col items-center justify-center space-y">
-                <h1 class="text-6xl md:text-8xl lg:text-10xl font-black tracking-normal leading-tight text-slate-900 drop-shadow-sm">     
-                    Join the Research Renaissance
-                </h1>
-                <p class="text-base sm:text-lg font-semibold tracking-normal text-slate-700 max-w-xl">
-                    Dive down the rabbit hole! Start your research journey today.
-                </p>
-            </div>
-
-            
-        </header>
-        <section class = "relative w-full ">
-            <div class="relative w-full">
-            <!-- Midground Grass Layer -->
-            <div class="absolute bottom-0 left-0 w-full h-24 bg-[#5c7c65] shadow-inner pointer-events-none" 
-                 style="clip-path: polygon(0% 30%, 5% 10%, 10% 25%, 15% 5%, 20% 30%, 25% 10%, 30% 35%, 35% 10%, 40% 30%, 45% 5%, 50% 25%, 55% 10%, 60% 20%, 65% 5%, 70% 30%, 75% 10%, 80% 35%, 85% 15%, 90% 30%, 95% 5%, 100% 25%, 100% 100%, 0% 100%);">
-            </div>
-        </div>
-        </section>
-        <!-- PAPER-CUT HILLS & GRASS TRANSITION -->
-
+        {% endcall %}
 
         <!-- UNDERGROUND DIRT SECTION & ROOTS -->
         <section class="relative w-full bg-dirt px-4 pt-4 pb-32 border-t-4 border-[#180e0a] min-h-[500px]">
-            
-            <!-- Decorative Root Lines using SVG -->
             <svg class="absolute top-0 left-0 w-full h-32 pointer-events-none opacity-40 z-10" viewBox="0 0 1200 100" preserveAspectRatio="none">
                 <path d="M100,0 Q120,40 150,80 T200,100" fill="none" stroke="#5c3a21" stroke-width="4" />
                 <path d="M400,0 Q380,50 350,90" fill="none" stroke="#5c3a21" stroke-width="3" />
@@ -51,143 +24,123 @@
                 <path d="M1100,0 Q1050,40 1020,90" fill="none" stroke="#5c3a21" stroke-width="3" />
             </svg>
 
-            <!-- ROOT BUTTON CONTAINER: Positioned near the roots area -->
             <div class="relative max-w-3xl mx-auto flex justify-center pt-6 pb-12 z-20">
-                <button onclick="openInterestModal()" class="group relative bg-[#1a2923] border-2 border-[#d4af37] px-8 py-3.5 rounded-full shadow-xl hover:bg-[#253830] transition-all transform hover:scale-105 cursor-pointer flex items-center space-x-3">
-                    <span class="text-[#d4af37] text-sm">🌱</span>
-                    <span class="font-mystical text-xs tracking-widest text-[#d4af37] font-bold">
-                       dig deep?
-                    </span>
+                <button onclick="openInterestModal()" class="group relative bg-panel-2 border-2 border-gold px-8 py-3.5 rounded-full shadow-xl hover:bg-[#253830] transition-all transform hover:scale-105 cursor-pointer flex items-center space-x-3">
+                    <span class="text-gold text-sm">🌱</span>
+                    <span class="font-mystical text-xs tracking-widest text-gold font-bold">dig deep?</span>
                 </button>
             </div>
 
-            <!-- ALCHEMIST CONTROL PANEL BOX -->
-            <div class="relative max-w-3xl mx-auto bg-[#0d1412] border-2 border-[#2c4238] rounded-md p-6 md:p-8 z-30 shadow-[0_20px_50px_rgba(0,0,0,0.8)] text-cream">
-                
-                <!-- Floating Tab Badge -->
-                <div class="absolute -top-5 left-6 bg-[#1a2923] border-2 border-[#d4af37] px-4 py-1.5 rounded shadow-md">
-                    <span class="font-mystical text-xs tracking-widest text-[#d4af37] uppercase font-bold">
-                        Alchemist Control Panel
-                    </span>
+            <!-- HOW IT WORKS PANEL -->
+            <div class="relative max-w-4xl mx-auto bg-panel border-2 border-moss rounded-md p-6 md:p-8 z-30 shadow-[0_20px_50px_rgba(0,0,0,0.8)] text-cream">
+                <div class="absolute -top-5 left-6 bg-panel-2 border-2 border-gold px-4 py-1.5 rounded shadow-md">
+                    <span class="font-mystical text-xs tracking-widest text-gold uppercase font-bold">How the rabbit hole works</span>
                 </div>
-
-                <!-- Panel Content -->
-                <div class="mt-4 space-y-6">
+                <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-6 font-magical text-sm text-gray-300">
                     <div>
-                        <label class="block font-mystical text-xs tracking-widest text-[#d4af37] uppercase mb-2">Domain Lore</label>
-                        <select class="w-full bg-[#080d0b] border border-[#2c4238] text-cream font-mystical text-xs px-4 py-3 rounded focus:outline-none focus:border-[#d4af37] cursor-pointer tracking-wider">
-                            <option>MYCELIUM & BIO-SENSOR</option>
-                            <option>QUANTUM SYSTEMS</option>
-                        </select>
+                        <p class="font-mystical text-xs text-gold uppercase tracking-widest mb-2">1 &middot; Your profile</p>
+                        <p>Major, interests, how much time you have and how hard you want it. Thirty seconds, no password.</p>
+                    </div>
+                    <div>
+                        <p class="font-mystical text-xs text-gold uppercase tracking-widest mb-2">2 &middot; The Rabbit Hole</p>
+                        <p>Projects ranked for you, then shelves by major, interest, difficulty and timeframe. Every project comes with a getting-started outline, a materials list with where to buy, documentation, tutorials and papers dug up with SerpApi.</p>
+                    </div>
+                    <div>
+                        <p class="font-mystical text-xs text-gold uppercase tracking-widest mb-2">3 &middot; The Caterpillar</p>
+                        <p>A Gemini mentor that knows your project, or helps you turn a pitch into a full project starter you can post to Wonderland for others to pick up.</p>
                     </div>
                 </div>
             </div>
-
         </section>
 {% endblock %}
 
 {% block after_main %}
-    <!-- INTEREST & ALCHEMY PROFILE MODAL (Hidden by default) -->
-<div id="interestModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs hidden transition-opacity">
-    <div class="relative w-full max-w-lg bg-[#0d1412] border-2 border-[#d4af37] rounded-lg p-6 md:p-8 shadow-[0_0_50px_rgba(212,175,55,0.2)] text-cream mx-4 my-6 max-h-[90vh] overflow-y-auto">
-        
-        <!-- Close Button -->
-        <button onclick="closeInterestModal()" class="absolute top-4 right-4 text-[#d4af37] hover:text-white font-mystical text-base cursor-pointer">
-            ✕
-        </button>
+<!-- PROFILE MODAL -->
+<div id="interestModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs {{ '' if open_modal else 'hidden' }} transition-opacity">
+    <div class="relative w-full max-w-xl bg-panel border-2 border-gold rounded-lg p-6 md:p-8 shadow-[0_0_50px_rgba(212,175,55,0.2)] text-cream mx-4 my-6 max-h-[92vh] overflow-y-auto">
+        <button type="button" onclick="closeInterestModal()" aria-label="Close" class="absolute top-4 right-4 text-gold hover:text-white font-mystical text-base cursor-pointer">✕</button>
 
-        <!-- Modal Header -->
-        <h3 class="font-mystical text-lg text-[#d4af37] mb-1 uppercase tracking-wider text-center font-bold">
-            Unearth Your Research Profile
-        </h3>
-        <p class="font-magical text-xs text-gray-400 text-center mb-6 tracking-wide">
-            Map out your academic discipline, focus areas, and temporal constraints.
-        </p>
+        <h3 class="font-mystical text-lg text-gold mb-1 uppercase tracking-wider text-center font-bold">Unearth Your Research Profile</h3>
+        <p class="font-magical text-xs text-gray-400 text-center mb-6 tracking-wide">Your major, your interests, your time. We do the digging.</p>
 
-        <!-- Profile Form -->
-        <form class="space-y-5" onsubmit="event.preventDefault(); closeInterestModal();">
-            
-            <!-- 1. Major Field -->
-             <div>
-                <label class="block font-mystical text-xs tracking-widest text-[#d4af37] uppercase mb-2">
-                    Academic Major / Discipline
-                </label>
+        {% if error %}
+        <p role="alert" class="font-magical text-sm text-pink border border-pink rounded px-4 py-2 mb-4 text-center">{{ error }}</p>
+        {% endif %}
+
+        <form method="post" action="/users" class="space-y-5">
+            <div>
+                <label for="username" class="block font-mystical text-xs tracking-widest text-gold uppercase mb-2">Username</label>
+                <input id="username" name="username" type="text" required minlength="2" maxlength="40" autocomplete="username"
+                       value="{{ form.get('username', '') }}" placeholder="e.g. sam_builds" class="field">
+                <p class="font-magical text-[11px] text-gray-500 mt-1">Already have one? Type it again to pick up where you left off.</p>
+            </div>
+
+            <div>
+                <label for="major" class="block font-mystical text-xs tracking-widest text-gold uppercase mb-2">Academic Major</label>
                 <div class="relative">
-                    <select class="w-full bg-[#131f1b] border border-[#2c4238] text-cream font-mystical text-xs px-4 py-3 rounded appearance-none focus:outline-none focus:border-[#d4af37] cursor-pointer tracking-wider">
-                        <option>Electrical and Computer Engineering</option>
-                        <option>Biochem</option>
-                        <option>Biology</option>
-                        <option>Computer Science</option>
+                    <select id="major" name="major" required class="field appearance-none cursor-pointer">
+                        <option value="" disabled {{ 'selected' if not form.get('major') }}>Choose your major</option>
+                        {% for m in majors %}
+                        <option value="{{ m }}" {{ 'selected' if form.get('major') == m }}>{{ m }}</option>
+                        {% endfor %}
                     </select>
-                    <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#d4af37] text-xs">
-                        ▼
+                    <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gold text-xs">▼</div>
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-mystical text-xs tracking-widest text-gold uppercase mb-2">Interests <span class="text-gray-500 normal-case tracking-normal font-magical">(pick a few)</span></label>
+                {% set picked = form.getlist('interests') if form.getlist is defined else [] %}
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-56 overflow-y-auto pr-1">
+                    {% for tag in featured_interests %}
+                    <label class="flex items-center space-x-2 bg-[#131f1b] border border-moss p-2 rounded cursor-pointer hover:border-gold transition-colors">
+                        <input type="checkbox" name="interests" value="{{ tag }}" class="accent-[#d4af37]" {{ 'checked' if tag in picked }}>
+                        <span class="font-magical text-xs tracking-wide text-cream">{{ tag }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+                <input name="other_interests" type="text" maxlength="200" value="{{ form.get('other_interests', '') }}"
+                       placeholder="Anything else? Comma-separated" class="field mt-2">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="timeframe" class="block font-mystical text-xs tracking-widest text-gold uppercase mb-2">Time you have</label>
+                    <div class="relative">
+                        <select id="timeframe" name="timeframe" required class="field appearance-none cursor-pointer">
+                            <option value="" disabled {{ 'selected' if not form.get('timeframe') }}>Choose a timeframe</option>
+                            {% for key, label, hours in timeframes %}
+                            <option value="{{ key }}" {{ 'selected' if form.get('timeframe') == key }}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gold text-xs">▼</div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-mystical text-xs tracking-widest text-gold uppercase mb-2">Difficulty</label>
+                    <div class="flex gap-2">
+                        {% for level in difficulties %}
+                        <label class="flex-1 text-center bg-[#131f1b] border border-moss rounded p-2 cursor-pointer hover:border-gold has-[:checked]:border-gold has-[:checked]:text-gold font-magical text-xs">
+                            <input type="radio" name="difficulty" value="{{ level }}" class="sr-only" {{ 'checked' if form.get('difficulty', 'beginner') == level }}>
+                            {{ level }}
+                        </label>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
 
-            <!-- 2. Interests Checkboxes -->
-            <div>
-                <label class="block font-mystical text-xs tracking-widest text-[#d4af37] uppercase mb-2">
-                    Research Interests
-                </label>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <label class="flex items-center space-x-3 bg-[#131f1b] border border-[#2c4238] p-3 rounded cursor-pointer hover:border-[#d4af37] transition-colors">
-                        <input type="checkbox" name="interest" value="biotech" class="accent-[#d4af37]">
-                        <span class="font-magical text-xs tracking-wide text-cream">Bio-Sensors</span>
-                    </label>
-                    <label class="flex items-center space-x-3 bg-[#131f1b] border border-[#2c4238] p-3 rounded cursor-pointer hover:border-[#d4af37] transition-colors">
-                        <input type="checkbox" name="interest" value="quantum" class="accent-[#d4af37]">
-                        <span class="font-magical text-xs tracking-wide text-cream">Quantum Systems</span>
-                    </label>
-                    <label class="flex items-center space-x-3 bg-[#131f1b] border border-[#2c4238] p-3 rounded cursor-pointer hover:border-[#d4af37] transition-colors">
-                        <input type="checkbox" name="interest" value="lowlevel" class="accent-[#d4af37]">
-                        <span class="font-magical text-xs tracking-wide text-cream">Low-Level C++</span>
-                    </label>
-                    <label class="flex items-center space-x-3 bg-[#131f1b] border border-[#2c4238] p-3 rounded cursor-pointer hover:border-[#d4af37] transition-colors">
-                        <input type="checkbox" name="interest" value="alchemy" class="accent-[#d4af37]">
-                        <span class="font-magical text-xs tracking-wide text-cream">Digital Alchemy</span>
-                    </label>
-                </div>
-            </div>
-
-            <!-- 3. Timeline Field -->
-            <div>
-                <label class="block font-mystical text-xs tracking-widest text-[#d4af37] uppercase mb-2">
-                    Research Timeline
-                </label>
-                <div class="relative">
-                    <select class="w-full bg-[#131f1b] border border-[#2c4238] text-cream font-mystical text-xs px-4 py-3 rounded appearance-none focus:outline-none focus:border-[#d4af37] cursor-pointer tracking-wider">
-                        <option>SEMESTER-LONG CHRONIC</option>
-                        <option>FORTNIGHT SPRINT (Hackathon)</option>
-                        <option>SOLSTICE RITUAL (Deep Dive)</option>
-                    </select>
-                    <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#d4af37] text-xs">
-                        ▼
-                    </div>
-                </div>
-            </div>
-
-            <!-- Submit / Seal Button -->
             <div class="pt-2 text-center">
-                <button type="submit" class="bg-[#1a2923] border-2 border-[#d4af37] text-[#d4af37] font-mystical text-xs uppercase tracking-widest px-6 py-3 rounded hover:bg-[#d4af37] hover:text-[#0d1412] transition-all shadow-md cursor-pointer font-bold w-full">
-                    Seal Your Alchemical Profile
-                </button>
+                <button type="submit" class="btn-gold w-full">Seal Your Profile and Dig In</button>
             </div>
         </form>
-
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-    <!-- JavaScript to control popup -->
     <script>
-        function openInterestModal() {
-            document.getElementById('interestModal').classList.remove('hidden');
-        }
-
-        function closeInterestModal() {
-            document.getElementById('interestModal').classList.add('hidden');
-        }
+        function openInterestModal() { document.getElementById('interestModal').classList.remove('hidden'); }
+        function closeInterestModal() { document.getElementById('interestModal').classList.add('hidden'); }
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeInterestModal(); });
     </script>
 {% endblock %}

@@ -10,3 +10,8 @@ src = ["backend"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+# Authored catalog content: one resource per line reads better than wrapped tuples.
+"backend/seed_data/*.py" = ["E501"]
+"backend/seeding.py" = ["E501"]

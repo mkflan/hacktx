@@ -27,7 +27,7 @@ def _clean(value, label: str, max_len: int) -> str:
 def _user_id(conn, raw) -> int:
     try:
         user_id = int(raw)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         raise ForumError("Choose who you are posting as.") from None
     if conn.execute("SELECT 1 FROM users WHERE id = ?", (user_id,)).fetchone() is None:
         raise ForumError("Unknown user.")
@@ -82,7 +82,7 @@ def create_post(conn, user_id, title, body, project_id=None) -> int:
     if project_id not in (None, ""):
         try:
             pid = int(project_id)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             raise ForumError("Unknown project.") from None
         if conn.execute("SELECT 1 FROM projects WHERE id = ?", (pid,)).fetchone() is None:
             raise ForumError("Unknown project.")

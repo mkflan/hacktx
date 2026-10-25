@@ -161,7 +161,7 @@ def test_body_cannot_override_saved_profile(client):
 def test_limit_bounds(client):
     assert len(recommend(client, "fixture-ece", {"limit": 1})["projects"]) == 1
     assert (
-        client.post("/api/users/fixture-ece/recommendations", json={"limit": 4}).status_code == 422
+        client.post("/api/users/fixture-ece/recommendations", json={"limit": 13}).status_code == 422
     )
 
 

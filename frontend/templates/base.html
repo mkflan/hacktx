@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>{% block title %}HackTX: The Rabbit Hole Research Hub{% endblock %}</title>
+    <title>{% block title %}Research Rabbit: The Rabbit Hole Research Hub{% endblock %}</title>
 
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 
@@ -22,6 +22,10 @@
             --color-blue: #b1e6f3;
             --color-dirt: #2b1810;
             --color-grass: #5c7c65;
+            --color-gold: #d4af37;
+            --color-panel: #0d1412;
+            --color-panel-2: #1a2923;
+            --color-moss: #2c4238;
 
             --font-cursive: 'Great Vibes', cursive;
             --font-handwriting: 'Satisfy', cursive;
@@ -29,9 +33,17 @@
             --font-magical: 'Space Grotesk', sans-serif;
         }
 
-        body {
-            background-color: #fffbf2;
-        }
+        body { background-color: #fffbf2; }
+
+        /* Netflix-style rows: hide the scrollbar but keep it scrollable */
+        .shelf { scrollbar-width: none; }
+        .shelf::-webkit-scrollbar { display: none; }
+
+        .tag { @apply font-magical text-[10px] tracking-wide rounded-full px-2 py-0.5 border border-moss text-gray-400; }
+        .tag-gold { @apply border-gold text-gold; }
+        .btn-gold { @apply font-mystical text-xs uppercase tracking-widest font-bold bg-panel-2 border-2 border-gold text-gold rounded px-5 py-3 hover:bg-gold hover:text-panel transition-all cursor-pointer; }
+        .btn-moss { @apply font-magical text-xs font-semibold tracking-wider bg-moss text-cream rounded px-4 py-2 hover:bg-gold hover:text-dirt transition-colors cursor-pointer; }
+        .field { @apply w-full bg-[#131f1b] border border-moss text-cream font-magical text-sm px-4 py-3 rounded focus:outline-none focus:border-gold; }
     </style>
 
     {% block head %}{% endblock %}
@@ -40,15 +52,34 @@
 
     <!-- NAVBAR -->
     <nav class="bg-purple/80 backdrop-blur sticky top-0 z-50 border-b border-purple-300/30">
-        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-            <div class="flex items-center space-x-3">
+        <div class="max-w-7xl mx-auto px-6 py-3 flex flex-wrap gap-3 justify-between items-center">
+            <a href="/" class="flex items-center space-x-3">
                 <span>🐇</span>
                 <span class="text-lg md:text-xl text-slate-800">Research Rabbit</span>
+            </a>
+            <div class="flex items-center gap-4 md:gap-6 text-xs md:text-sm font-semibold tracking-wider">
+                <a href="/" class="hover:text-white transition-colors {{ 'text-white' if request.path == '/' }}">Home</a>
+                <a href="/dashboard" class="hover:text-white transition-colors {{ 'text-white' if request.path.startswith('/dashboard') or request.path.startswith('/projects') }}">The Rabbit Hole</a>
+                <a href="/chat" class="hover:text-white transition-colors {{ 'text-white' if request.path.startswith('/chat') }}">Ask the Caterpillar</a>
+                <a href="/forum" class="hover:text-white transition-colors {{ 'text-white' if request.path.startswith('/forum') }}">Wonderland</a>
             </div>
-            <div class="space-x-6 text-xs md:text-sm font-semibold tracking-wider">
-                <a href="/#generator" class="hover:text-white transition-colors">Generator</a>
-                <a href="/#tracker" class="hover:text-white transition-colors">Tracker Board</a>
-                <a href="/forum" class="hover:text-white transition-colors">Wonderland</a>
+            <div class="flex items-center gap-2 font-magical text-xs">
+                {% if current_user %}
+                <form method="post" action="/session/{{ current_user.id }}" id="switchUserForm" class="flex items-center gap-2">
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <label class="text-slate-700">You are</label>
+                    <select name="switch_to" aria-label="Switch demo user"
+                            onchange="this.form.action = '/session/' + this.value; this.form.submit();"
+                            class="bg-cream/90 border border-purple-300/60 rounded-full px-3 py-1 text-slate-800">
+                        {% for u in demo_users %}
+                        <option value="{{ u.id }}" {{ 'selected' if u.id == current_user.id }}>{{ u.username }} ({{ u.major }})</option>
+                        {% endfor %}
+                    </select>
+                </form>
+                <a href="/?new=1" class="text-slate-700 hover:text-white underline-offset-2 hover:underline">New profile</a>
+                {% else %}
+                <a href="/?new=1" class="bg-cream/90 border border-purple-300/60 rounded-full px-3 py-1 text-slate-800 hover:bg-white">Create your profile</a>
+                {% endif %}
             </div>
         </div>
     </nav>
@@ -62,7 +93,7 @@
 
     <!-- FOOTER -->
     <footer class="border-t border-purple-900/30 py-8 text-center text-xs text-slate-500 font-mono bg-[#fffbf2]">
-        <p>Made with ♥ &mdash; HackTX 2026</p>
+        <p>Made with ♥ &mdash; HackTX 2026 &middot; Sources dug up live with SerpApi, plans written with Gemini</p>
     </footer>
 
     {% block scripts %}{% endblock %}

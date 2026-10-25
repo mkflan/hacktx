@@ -81,6 +81,22 @@ class Resource(_Frozen):
     verification_status: VerificationStatus = "provided_unverified"
     content_excerpt: str | None = Field(default=None, max_length=4000)
     metadata: dict[str, str] = Field(default_factory=dict)
+    # Where the record came from: "authored" (written by the team) or "serpapi:<engine>".
+    source: str = Field(default="authored", max_length=100)
+    thumbnail_url: str | None = Field(default=None, max_length=2000)
+
+
+class Material(_Frozen):
+    """Something to buy or gather for a project. shop_* fields come from a real search result
+    (SerpApi Google Shopping) or stay None; they are never guessed."""
+
+    name: str = Field(min_length=1, max_length=200)
+    quantity: str | None = Field(default=None, max_length=100)
+    purpose: str | None = Field(default=None, max_length=600)
+    estimated_cost_usd: float | None = Field(default=None, ge=0)
+    shop_url: str | None = Field(default=None, max_length=2000)
+    shop_source: str | None = Field(default=None, max_length=200)
+    price_usd: float | None = Field(default=None, ge=0)
 
 
 class NormalizedUser(_Frozen):
@@ -89,6 +105,8 @@ class NormalizedUser(_Frozen):
     major: str = Field(default="", max_length=200)
     interests: tuple[Tag, ...] = ()
     time_commitment: TimeValue = TimeValue()
+    # The student's own difficulty preference; request preferences override it per call.
+    skill_level: Difficulty | None = None
 
 
 class NormalizedProject(_Frozen):
@@ -100,6 +118,9 @@ class NormalizedProject(_Frozen):
     resources: tuple[Resource, ...] = ()
     description: str | None = Field(default=None, max_length=4000)
     difficulty: Difficulty | None = None
+    # Numbered outline of how to start (one step per line).
+    getting_started: str | None = Field(default=None, max_length=6000)
+    materials: tuple[Material, ...] = ()
 
 
 @runtime_checkable

@@ -6,17 +6,21 @@ from flask import current_app, g
 DATABASE_PATH = Path(__file__).parent / "app.db"
 
 SCHEMA = (Path(__file__).parent / "schema.sql").read_text(encoding="utf-8")
-SEED = (Path(__file__).parent / "seed.sql").read_text(encoding="utf-8")
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 
 def get_db():
     """Return the SQLite connection for the current request."""
     if "db" not in g:
-        g.db = sqlite3.connect(current_app.config["DATABASE"])
-        g.db.row_factory = sqlite3.Row
-        g.db.execute("PRAGMA foreign_keys = ON")
+        g.db = connect(current_app.config["DATABASE"])
     return g.db
+
+
+def connect(path: str) -> sqlite3.Connection:
+    conn = sqlite3.connect(path)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
+    return conn
 
 
 def close_db(e=None):
@@ -39,15 +43,15 @@ def apply_schema(db, seed=True):
         )
     db.executescript(SCHEMA)
     if seed:
-        db.executescript(SEED)
+        import seeding  # local import: seeding pulls in the whole authored catalog
+
+        seeding.seed_all(db)
     db.commit()
 
 
 def connect_memory(seed=True):
     """A private in-memory database with the schema (and demo rows). For tests and demos."""
-    db = sqlite3.connect(":memory:")
-    db.row_factory = sqlite3.Row
-    db.execute("PRAGMA foreign_keys = ON")
+    db = connect(":memory:")
     apply_schema(db, seed=seed)
     return db
 

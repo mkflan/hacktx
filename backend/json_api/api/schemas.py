@@ -35,7 +35,7 @@ class ProjectsQuery(_Request):
 
 
 class RecommendationsRequest(_Request):
-    limit: int = Field(default=3, ge=1, le=3)
+    limit: int = Field(default=3, ge=1, le=12)
     preferences: PersonalizationPreferences | None = None
 
 

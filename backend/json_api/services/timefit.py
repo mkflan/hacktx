@@ -23,6 +23,31 @@ def _fmt(value: float) -> str:
     return f"{value:g}"
 
 
+# Dashboard rows and the landing form share these buckets of estimated total hours.
+TIMEFRAME_BUCKETS: tuple[tuple[str, str, float | None], ...] = (
+    ("weekend", "A weekend", 12),
+    ("two_weeks", "Two weeks", 25),
+    ("month", "A month", 45),
+    ("semester", "A semester", None),
+)
+
+
+def timeframe_bucket(value: TimeValue) -> tuple[str, str] | None:
+    """(key, label) for a timeline with known total hours; None when hours are unknown."""
+    hours = value.total_hours
+    if hours is None:
+        return None
+    for key, label, cap in TIMEFRAME_BUCKETS:
+        if cap is None or hours <= cap:
+            return key, label
+    return None
+
+
+def timeframe_label(value: TimeValue) -> str:
+    bucket = timeframe_bucket(value)
+    return bucket[1] if bucket else "Timeframe unknown"
+
+
 def describe(value: TimeValue) -> str:
     if value.raw:
         return value.raw

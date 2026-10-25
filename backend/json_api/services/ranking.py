@@ -39,7 +39,8 @@ def _score_project(
     reasons: list[str] = []
     preference_bonus = 0.0
 
-    if prefs and prefs.skill_level:
+    skill_level = effective_skill_level(user, prefs)
+    if skill_level:
         if project.difficulty is None:
             notices.append(
                 Notice(
@@ -48,9 +49,9 @@ def _score_project(
                     project_id=project.id,
                 )
             )
-        elif DIFFICULTY_ORDER[project.difficulty] > DIFFICULTY_ORDER[prefs.skill_level]:
+        elif DIFFICULTY_ORDER[project.difficulty] > DIFFICULTY_ORDER[skill_level]:
             return None, "difficulty"
-        elif project.difficulty == prefs.skill_level:
+        elif project.difficulty == skill_level:
             preference_bonus += SKILL_MATCH_BONUS
             reasons.append(f"Difficulty ({project.difficulty}) matches your stated skill level.")
         else:
@@ -87,7 +88,7 @@ def _score_project(
         notices.append(
             Notice(code="TIME_FIT_UNKNOWN", message=time_fit.warning, project_id=project.id)
         )
-    if project.difficulty is None and not (prefs and prefs.skill_level):
+    if project.difficulty is None and not skill_level:
         notices.append(
             Notice(
                 code="UNKNOWN_DIFFICULTY",
@@ -172,7 +173,7 @@ def recommend(
                 message=f"Only {len(top)} project(s) had a real match signal.",
             )
         )
-    if not prefs or prefs.skill_level is None:
+    if effective_skill_level(user, prefs) is None:
         notices.append(
             Notice(
                 code="SKILL_LEVEL_UNKNOWN",
@@ -180,6 +181,13 @@ def recommend(
             )
         )
     return top, notices
+
+
+def effective_skill_level(user: NormalizedUser, prefs: PersonalizationPreferences | None):
+    """Request preferences win; otherwise the level saved on the student's profile."""
+    if prefs and prefs.skill_level:
+        return prefs.skill_level
+    return user.skill_level
 
 
 def project_sort_key_from_card(card: RecommendationCard) -> tuple[str, str]:

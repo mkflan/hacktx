@@ -29,8 +29,11 @@ class Settings:
     llm_mode: str = "mock"
     data_mode: str = "fake"
     gemini_api_key: str | None = field(default=None, repr=False)
-    gemini_model: str = "gemini-3.8-flash"
+    gemini_model: str = "gemini-3.6-flash"  # 3.8 was overloaded on every live call 2026-10-24
     gemini_thinking: str = "medium"
+    serpapi_api_key: str | None = field(default=None, repr=False)
+    # Signs the session cookie that remembers the current demo user. Override with SECRET_KEY.
+    secret_key: str = field(default="research-rabbit-local-demo", repr=False)
     llm_deadline_seconds: float = 45.0
     llm_max_tokens: int = 16000
     cors_origins: tuple[str, ...] = DEFAULT_CORS_ORIGINS
@@ -69,6 +72,10 @@ class Settings:
             kwargs["gemini_model"] = v
         if (v := get("GEMINI_THINKING")) is not None:
             kwargs["gemini_thinking"] = v.lower()
+        if (v := get("SERPAPI_API_KEY")) is not None:
+            kwargs["serpapi_api_key"] = v
+        if (v := get("SECRET_KEY")) is not None:
+            kwargs["secret_key"] = v
         if (v := get("LLM_DEADLINE_SECONDS")) is not None:
             kwargs["llm_deadline_seconds"] = float(v)
         if (v := get("CORS_ORIGINS")) is not None:

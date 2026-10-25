@@ -75,7 +75,7 @@ def test_requires_explicit_api_key():
 
 def test_real_client_builds_without_network():
     real = GeminiLLMProvider(SETTINGS)
-    assert real.model_id == "gemini-3.8-flash"
+    assert real.model_id == "gemini-3.6-flash"
 
 
 def test_valid_output_needs_one_call_with_structured_output_request():
@@ -85,7 +85,7 @@ def test_valid_output_needs_one_call_with_structured_output_request():
     assert len(messages.requests) == 1
     sent = messages.requests[0]
     config = sent["config"]
-    assert sent["model"] == "gemini-3.8-flash"
+    assert sent["model"] == "gemini-3.6-flash"
     assert config.thinking_config.thinking_level.value == "MEDIUM"
     assert config.response_mime_type == "application/json"
     assert config.response_json_schema["type"] == "object"
