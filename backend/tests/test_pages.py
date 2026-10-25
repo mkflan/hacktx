@@ -8,6 +8,7 @@ from jinja2 import StrictUndefined
 
 import app as flask_app
 import db
+import forum
 import seed_data
 from json_api.config import Settings
 from json_api.dev.fake_provider import InMemoryProjectDataProvider
@@ -51,7 +52,7 @@ def test_static_pages_render(client, path):
     response = client.get(path)
     assert response.status_code == 200
     assert response.content_type.startswith("text/html")
-    assert b"Research Rabbit" in response.data  # base.html navbar
+    assert b"RabbitHole" in response.data  # base.html navbar
 
 
 def test_landing_opens_the_profile_modal_for_a_new_visitor(client):
@@ -171,9 +172,74 @@ def test_dashboard_reports_a_broken_database_instead_of_an_empty_page():
 def test_forum_lists_seeded_posts_and_accepts_a_post(client):
     page = client.get("/forum").get_data(as_text=True)
     assert "Soil sensor readings are noisy" in page
+    client.post("/session/3")
     response = client.post(
-        "/forum/posts",
-        data={"user_id": "1", "title": "Hello", "body": "First post", "project_id": ""},
+        "/forum/posts", data={"title": "Hello", "body": "First post", "project_id": ""}
     )
     assert response.status_code == 302
     assert "Hello" in client.get("/forum").get_data(as_text=True)
+    assert forum.list_posts(db.get_db())[0]["author"] == "priya_bme"  # the signed-in student
+
+
+def test_forum_posts_ignore_a_user_id_sent_by_the_form(client):
+    client.post("/session/3")
+    client.post("/forum/posts", data={"user_id": "1", "title": "Hello", "body": "Body"})
+    assert forum.list_posts(db.get_db())[0]["author"] == "priya_bme"
+
+
+def test_forum_comments_are_made_as_the_signed_in_user_only(client):
+    page = client.get("/forum").get_data(as_text=True)
+    assert 'aria-label="Comment as"' not in page and '<select name="user_id"' not in page
+    assert "Create a profile to join in" in page  # no student signed in: no comment form
+
+    client.post("/session/2")
+    page = client.get("/forum").get_data(as_text=True)
+    assert "Reply as maya_demo" in page and '<select name="user_id"' not in page
+    response = client.post(
+        "/forum/posts/1/comments", data={"user_id": "1", "body": "Try a capacitor."}
+    )
+    assert response.status_code == 302
+    comments = forum.get_post(db.get_db(), 1)["comments"]
+    assert (comments[-1]["author"], comments[-1]["body"]) == ("maya_demo", "Try a capacitor.")
+    assert "Reply as maya_demo" in client.get("/forum/posts/1").get_data(as_text=True)
+
+
+def test_forum_comment_and_post_need_a_profile(client):
+    response = client.post("/forum/posts/1/comments", data={"body": "hi"})
+    assert response.status_code == 400
+    assert "Create a profile" in response.get_data(as_text=True)
+    assert client.post("/forum/posts", data={"title": "t", "body": "b"}).status_code == 400
+    assert forum.get_post(db.get_db(), 1)["comment_count"] == 1  # nothing was written
+
+
+def test_nav_switcher_lists_a_profile_created_on_the_landing_page(client):
+    client.post("/users", data=PROFILE)
+    page = client.get("/dashboard").get_data(as_text=True)
+    switcher = page.split('name="switch_to"')[1].split("</select>")[0]
+    assert "sam_builds" in switcher and "alex_demo" in switcher
+
+
+def test_nav_hides_test_users_and_text_size_behind_the_accessibility_button(client):
+    page = client.get("/").get_data(as_text=True)
+    assert 'aria-controls="a11yPanel"' in page and 'id="a11yPanel"' in page
+    assert 'id="textSizeRange"' in page and 'type="range"' in page
+    assert "data-text-size=" not in page  # the old A / A+ / A++ buttons are gone
+    client.post("/session/1")
+    page = client.get("/").get_data(as_text=True)
+    assert page.index('id="a11yPanel"') < page.index('name="switch_to"')  # inside the popover
+
+
+def test_app_name_tabs_landing_copy_and_footer(client):
+    page = client.get("/").get_data(as_text=True)
+    for tab in ("Rabbit Hole Projects", "Caterpillar Mentor", "Wonderland Forum"):
+        assert tab in page, tab
+    assert "RabbitHole" in page and "Research Rabbit" not in page
+    assert "Research Renaissance" not in page and "Research Profile" not in page
+    assert "Made with ♥ by sudo make us win" in page
+    assert "plans written with Gemini" not in page and "Sources dug up live" not in page
+
+
+def test_project_page_dig_deeper_sits_under_the_materials(client):
+    page = client.get("/projects/1").get_data(as_text=True)
+    materials = page.index("Materials and where to get them")
+    assert materials < page.index('id="digBtn"') < page.index('id="resourcesColumn"')

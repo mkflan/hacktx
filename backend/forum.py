@@ -72,11 +72,6 @@ def _user_id(conn, raw) -> int:
     return user_id
 
 
-def list_users(conn) -> list[dict]:
-    rows = conn.execute("SELECT id, username, major FROM users ORDER BY id").fetchall()
-    return [dict(r) for r in rows]
-
-
 def list_projects(conn) -> list[dict]:
     rows = conn.execute("SELECT id, name FROM projects ORDER BY name").fetchall()
     return [dict(r) for r in rows]

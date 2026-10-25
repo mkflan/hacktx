@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>{% block title %}Research Rabbit: The Rabbit Hole Research Hub{% endblock %}</title>
+    <title>{% block title %}RabbitHole: find a project that fits{% endblock %}</title>
     <!-- Tab icon: the rabbit on a bark-brown tile (no image file needed) -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%237a4f2d'/><text x='32' y='46' font-size='38' text-anchor='middle'>🐇</text></svg>">
 
@@ -15,16 +15,28 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Space+Grotesk:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 
     <script>
-        /* Text size switch: multiplies the fluid root font size (see html below), so everything
-           (rem based) grows together and still follows the window width. */
-        const TEXT_SIZES = { normal: "1", large: "1.15", xlarge: "1.3" };
-        function applyTextSize(size) {
-            if (!TEXT_SIZES[size]) size = "normal";
-            document.documentElement.style.setProperty("--text-scale", TEXT_SIZES[size]);
-            document.querySelectorAll("[data-text-size]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.textSize === size)));
-            try { localStorage.setItem("rabbit-text-size", size); } catch (e) {}
+        /* Text size: a percentage (100-150) that multiplies the fluid root font size (see html
+           below), so everything rem based grows together and still follows the window width.
+           Applied here, before the page paints, from the value saved last time. */
+        const TEXT_SCALE_KEY = "rabbit-text-scale";
+        function clampTextScale(pct) { return Math.min(150, Math.max(100, Math.round((Number(pct) || 100) / 5) * 5)); }
+        function applyTextScale(pct) {
+            pct = clampTextScale(pct);
+            document.documentElement.style.setProperty("--text-scale", String(pct / 100));
+            const range = document.getElementById("textSizeRange"), out = document.getElementById("textSizeValue");
+            if (range) range.value = pct;
+            if (out) out.textContent = pct + "%";
+            try { localStorage.setItem(TEXT_SCALE_KEY, String(pct)); } catch (e) {}
         }
-        try { applyTextSize(localStorage.getItem("rabbit-text-size")); } catch (e) {}
+        function savedTextScale() {
+            try {
+                const saved = localStorage.getItem(TEXT_SCALE_KEY);
+                if (saved) return saved;
+                /* the earlier A / A+ / A++ switch stored a word */
+                return { normal: 100, large: 115, xlarge: 130 }[localStorage.getItem("rabbit-text-size")] || 100;
+            } catch (e) { return 100; }
+        }
+        applyTextScale(savedTextScale());
     </script>
 
     <style type="text/tailwindcss">
@@ -57,7 +69,7 @@
             --font-magical: 'Space Grotesk', sans-serif;
         }
 
-        /* Fluid size: the page grows and shrinks with the window width, times the text size switch. */
+        /* Fluid size: the page grows and shrinks with the window width, times the text size setting. */
         html { font-size: calc(var(--text-scale, 1) * clamp(13px, 0.35vw + 11px, 20px)); }
         body { background-color: #fffbf2; }
 
@@ -67,8 +79,8 @@
         .shelf::-webkit-scrollbar-track { background: #3e2c1f; border-radius: 6px; }
         .shelf::-webkit-scrollbar-thumb { background: #7fa07f; border-radius: 6px; }
 
-        .text-size-btn { @apply font-magical font-semibold text-slate-800 bg-cream border border-purple-300/60 rounded px-2 py-0.5 cursor-pointer hover:bg-white; }
-        .text-size-btn[aria-pressed="true"] { @apply bg-forest text-cream border-forest; }
+        .nav-pill { @apply bg-cream/90 border border-purple-300/60 rounded-full px-3 py-1 text-slate-800 hover:bg-white; }
+        .a11y-field { @apply w-full bg-white border border-purple-300/60 rounded px-2 py-1.5 text-slate-800 text-sm; }
 
         .tag { @apply font-magical text-xs tracking-wide rounded-full px-2 py-0.5 border border-moss text-gray-400; }
         .tag-leaf { @apply border-leaf text-leaf; }
@@ -86,36 +98,51 @@
         <div class="max-w-7xl mx-auto px-6 py-3 flex flex-wrap gap-3 justify-between items-center">
             <a href="/" class="flex items-center space-x-3">
                 <span>🐇</span>
-                <span class="font-heading font-bold text-xl md:text-2xl text-slate-900">Research Rabbit</span>
+                <span class="font-heading font-bold text-xl md:text-2xl text-slate-900">RabbitHole</span>
             </a>
             <div class="flex flex-wrap items-center gap-x-4 gap-y-1 md:gap-x-6 text-sm md:text-base font-semibold tracking-wide">
                 <a href="/" class="hover:text-forest hover:underline underline-offset-4 decoration-2 transition-colors {{ 'text-forest underline' if request.path == '/' }}">Home</a>
-                <a href="/dashboard" class="hover:text-forest hover:underline underline-offset-4 decoration-2 transition-colors {{ 'text-forest underline' if request.path.startswith('/dashboard') or request.path.startswith('/projects') }}">The Rabbit Hole</a>
-                <a href="/chat" class="hover:text-forest hover:underline underline-offset-4 decoration-2 transition-colors {{ 'text-forest underline' if request.path.startswith('/chat') }}">Ask the Caterpillar</a>
-                <a href="/forum" class="hover:text-forest hover:underline underline-offset-4 decoration-2 transition-colors {{ 'text-forest underline' if request.path.startswith('/forum') }}">Wonderland</a>
+                <a href="/dashboard" class="hover:text-forest hover:underline underline-offset-4 decoration-2 transition-colors {{ 'text-forest underline' if request.path.startswith('/dashboard') or request.path.startswith('/projects') }}">Rabbit Hole Projects</a>
+                <a href="/chat" class="hover:text-forest hover:underline underline-offset-4 decoration-2 transition-colors {{ 'text-forest underline' if request.path.startswith('/chat') }}">Caterpillar Mentor</a>
+                <a href="/forum" class="hover:text-forest hover:underline underline-offset-4 decoration-2 transition-colors {{ 'text-forest underline' if request.path.startswith('/forum') }}">Wonderland Forum</a>
             </div>
             <div class="flex flex-wrap items-center gap-2 font-magical text-sm">
-                {% if current_user %}
-                <form method="post" action="/session/{{ current_user.id }}" id="switchUserForm" class="flex items-center gap-2">
-                    <input type="hidden" name="next" value="{{ request.path }}">
-                    <label class="text-slate-700">You are</label>
-                    <select name="switch_to" aria-label="Switch demo user"
-                            onchange="this.form.action = '/session/' + this.value; this.form.submit();"
-                            class="bg-cream/90 border border-purple-300/60 rounded-full px-3 py-1 text-slate-800">
-                        {% for u in demo_users %}
-                        <option value="{{ u.id }}" {{ 'selected' if u.id == current_user.id }}>{{ u.username }} ({{ u.major }})</option>
-                        {% endfor %}
-                    </select>
-                </form>
-                <a href="/?new=1" class="text-slate-800 hover:text-forest underline-offset-2 hover:underline">New profile</a>
-                {% else %}
-                <a href="/?new=1" class="bg-cream/90 border border-purple-300/60 rounded-full px-3 py-1 text-slate-800 hover:bg-white">Create your profile</a>
+                {% if not current_user %}
+                <a href="/?new=1" class="nav-pill">Create your profile</a>
                 {% endif %}
-                <div role="group" aria-label="Text size" class="flex items-center gap-1 ml-2">
-                    <span class="text-slate-700 mr-1">Text</span>
-                    <button type="button" class="text-size-btn text-sm" data-text-size="normal" aria-pressed="true" title="Normal text">A</button>
-                    <button type="button" class="text-size-btn text-base" data-text-size="large" aria-pressed="false" title="Large text">A+</button>
-                    <button type="button" class="text-size-btn text-lg" data-text-size="xlarge" aria-pressed="false" title="Extra large text">A++</button>
+
+                <!-- Accessibility menu: text size, plus the test-user switcher for demos -->
+                <div class="relative" id="a11yRoot">
+                    <button type="button" id="a11yBtn" aria-expanded="false" aria-controls="a11yPanel" aria-haspopup="dialog"
+                            title="Accessibility and demo settings" class="nav-pill flex items-center gap-1.5 cursor-pointer">
+                        <svg aria-hidden="true" viewBox="0 0 24 24" class="w-4 h-4 fill-current"><circle cx="12" cy="4" r="2"/><path d="M19 13v-2c-1.54.02-3.09-.75-4.07-1.83l-1.29-1.43c-.17-.19-.38-.34-.61-.45-.01 0-.01-.01-.02-.01H13c-.35-.2-.75-.3-1.19-.26C10.76 7.11 10 8.04 10 9.09V15c0 1.1.9 2 2 2h5v5h2v-5.5c0-1.1-.9-2-2-2h-3v-3.45c1.29 1.07 3.25 1.94 5 1.95zm-6.17 5c-.41 1.16-1.52 2-2.83 2-1.66 0-3-1.34-3-3 0-1.31.84-2.41 2-2.83V12.1c-2.28.46-4 2.48-4 4.9 0 2.76 2.24 5 5 5 2.42 0 4.44-1.72 4.9-4h-2.07z"/></svg>
+                        <span class="font-semibold">Accessibility</span>
+                    </button>
+                    <div id="a11yPanel" role="dialog" aria-label="Accessibility and demo settings" hidden
+                         class="absolute right-0 mt-2 w-72 bg-cream border border-purple-300/60 rounded-lg p-4 space-y-4 text-slate-800 z-50">
+                        <div>
+                            <label for="textSizeRange" class="flex justify-between font-semibold">
+                                <span>Text size</span><span id="textSizeValue" aria-live="polite">100%</span>
+                            </label>
+                            <input id="textSizeRange" type="range" min="100" max="150" step="5" value="100"
+                                   aria-valuemin="100" aria-valuemax="150" class="w-full accent-forest cursor-pointer">
+                            <div class="flex justify-between text-xs text-slate-600" aria-hidden="true"><span>A</span><span class="text-base">A</span></div>
+                        </div>
+                        {% if demo_users %}
+                        <form method="post" action="/session/{{ current_user.id if current_user else demo_users[0].id }}" class="space-y-1 border-t border-purple-300/40 pt-3">
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <label for="switchUser" class="block font-semibold">Test user</label>
+                            <select id="switchUser" name="switch_to" aria-label="Switch test user" class="a11y-field cursor-pointer"
+                                    onchange="this.form.action = '/session/' + this.value; this.form.submit();">
+                                {% if not current_user %}<option value="" selected disabled>Pick a student</option>{% endif %}
+                                {% for u in demo_users %}
+                                <option value="{{ u.id }}" {{ 'selected' if current_user and u.id == current_user.id }}>{{ u.username }} ({{ u.major }})</option>
+                                {% endfor %}
+                            </select>
+                            <p class="text-xs text-slate-600">Switches who the app thinks you are. <a href="/?new=1" class="underline hover:text-forest">New profile</a></p>
+                        </form>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -130,12 +157,21 @@
 
     <!-- FOOTER -->
     <footer class="border-t border-purple-900/30 py-8 text-center text-sm text-slate-500 font-mono bg-[#fffbf2]">
-        <p>Made with ♥ &mdash; HackTX 2026 &middot; Sources dug up live with SerpApi, plans written with Gemini</p>
+        <p>Made with ♥ by sudo make us win &middot; HackTX 2026</p>
     </footer>
 
     <script>
-        document.querySelectorAll("[data-text-size]").forEach((b) => b.addEventListener("click", () => applyTextSize(b.dataset.textSize)));
-        try { applyTextSize(localStorage.getItem("rabbit-text-size")); } catch (e) { applyTextSize("normal"); }
+        /* Accessibility menu: open and close, Escape and clicks outside close it. */
+        (() => {
+            const btn = document.getElementById("a11yBtn"), panel = document.getElementById("a11yPanel"), root = document.getElementById("a11yRoot");
+            const setOpen = (open) => { panel.hidden = !open; btn.setAttribute("aria-expanded", String(open)); };
+            btn.addEventListener("click", () => setOpen(panel.hidden));
+            document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !panel.hidden) { setOpen(false); btn.focus(); } });
+            document.addEventListener("click", (e) => { if (!panel.hidden && !root.contains(e.target)) setOpen(false); });
+            const range = document.getElementById("textSizeRange");
+            range.addEventListener("input", () => applyTextScale(range.value));
+            applyTextScale(savedTextScale());  // now the slider exists: show the saved value on it
+        })();
 
         /* Mouse wheel over a shelf scrolls it sideways; at either end the page scrolls as usual. */
         document.querySelectorAll(".shelf").forEach((shelf) => {

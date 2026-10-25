@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 {% from "_macros.html" import sky %}
 
-{% block title %}Research Rabbit: The Rabbit Hole Research Hub{% endblock %}
+{% block title %}RabbitHole: find a project that fits{% endblock %}
 
 {% block content %}
-        {% call sky("Join the Research Renaissance", "Dive down the rabbit hole! Tell us your major, your interests and your time, and we will dig up a project that fits.", "min-h-[460px]", fancy=True) %}
+        {% call sky("Find Your Next Project", "Tumble down the rabbit hole. Tell us your major, your interests and your time, and we will dig up a hands-on project that fits, with the plan, the parts and the sources to start it.", "min-h-[460px]", fancy=True) %}
             <div class="flex flex-wrap gap-3 justify-center pt-4">
                 {% if current_user %}
-                <a href="/dashboard" class="btn-leaf">Open my Rabbit Hole</a>
+                <a href="/dashboard" class="btn-leaf">Open my project shelves</a>
                 <button type="button" onclick="openInterestModal()" class="font-magical text-base font-semibold text-slate-800 bg-cream/90 border border-purple-300/60 rounded px-5 py-3 hover:bg-white">Start a new profile</button>
                 {% else %}
                 <button type="button" onclick="openInterestModal()" class="btn-leaf">Create your profile</button>
@@ -42,12 +42,12 @@
                         <p>Major, interests, how much time you have and how hard you want it. Thirty seconds, no password.</p>
                     </div>
                     <div>
-                        <p class="font-heading text-sm text-leaf tracking-wide mb-2">2 &middot; The Rabbit Hole</p>
+                        <p class="font-heading text-sm text-leaf tracking-wide mb-2">2 &middot; Rabbit Hole Projects</p>
                         <p>Projects ranked for you, then shelves by major, interest, difficulty and timeframe. Every project comes with a getting-started outline, a materials list with where to buy, documentation, tutorials and papers dug up with SerpApi.</p>
                     </div>
                     <div>
-                        <p class="font-heading text-sm text-leaf tracking-wide mb-2">3 &middot; The Caterpillar</p>
-                        <p>A Gemini mentor that knows your project, or helps you turn a pitch into a full project starter you can post to Wonderland for others to pick up.</p>
+                        <p class="font-heading text-sm text-leaf tracking-wide mb-2">3 &middot; Caterpillar Mentor</p>
+                        <p>A Gemini mentor that knows your project, or helps you turn a pitch into a full project starter you can post to the Wonderland Forum for others to pick up.</p>
                     </div>
                 </div>
             </div>
@@ -60,7 +60,7 @@
     <div class="relative w-full max-w-xl bg-panel border-2 border-leaf rounded-lg p-6 md:p-8 text-cream mx-4 my-6 max-h-[92vh] overflow-y-auto">
         <button type="button" onclick="closeInterestModal()" aria-label="Close" class="absolute top-4 right-4 text-leaf hover:text-white font-heading text-lg cursor-pointer">✕</button>
 
-        <h3 class="font-heading text-xl text-leaf mb-1 tracking-wide text-center font-bold">Unearth Your Research Profile</h3>
+        <h3 class="font-heading text-xl text-leaf mb-1 tracking-wide text-center font-bold">Unearth Your Project Profile</h3>
         <p class="font-magical text-sm text-gray-400 text-center mb-6 tracking-wide">Your major, your interests, your time. We do the digging.</p>
 
         {% if error %}

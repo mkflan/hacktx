@@ -57,7 +57,7 @@ def inject_nav():
         users = ctx.data.list_users() if ctx.data_provider is not None else []
     except AppError:
         users = []
-    return {"current_user": current_user(), "demo_users": users[:10]}
+    return {"current_user": current_user(), "demo_users": users}
 
 
 @pages.app_template_filter("timeframe")
@@ -320,7 +320,6 @@ def render_forum(error=None, status=200, form=None):
         ),
         filters=filters,
         sorts=forum.SORT_LABELS,
-        users=forum.list_users(conn),
         projects=forum.list_projects(conn),
         limits=LIMITS,
         error=error,
@@ -339,9 +338,7 @@ def show_post(post_id: int):
     post = forum.get_post(conn, post_id)
     if post is None:
         abort(404)
-    return render_template(
-        "post.html", post=post, users=forum.list_users(conn), limits=LIMITS, error=None
-    )
+    return render_template("post.html", post=post, limits=LIMITS, error=None)
 
 
 @pages.route("/forum/starters", methods=["POST"])
@@ -363,10 +360,14 @@ def post_starter():
 
 @pages.route("/forum/posts", methods=["POST"])
 def create_forum_post():
+    """Posts are made as the signed-in student; a user_id in the form is ignored."""
     f = request.form
+    user = current_user()
+    if user is None:
+        return render_forum(error="Create a profile before posting.", status=400, form=f)
     try:
         post_id = forum.create_post(
-            db.get_db(), f.get("user_id"), f.get("title"), f.get("body"), f.get("project_id")
+            db.get_db(), user.id, f.get("title"), f.get("body"), f.get("project_id")
         )
     except forum.ForumError as exc:
         return render_forum(error=exc.message, status=exc.status, form=f)
@@ -375,9 +376,13 @@ def create_forum_post():
 
 @pages.route("/forum/posts/<int:post_id>/comments", methods=["POST"])
 def create_forum_comment(post_id):
+    """Comments are made as the signed-in student; a user_id in the form is ignored."""
     f = request.form
+    user = current_user()
+    if user is None:
+        return render_forum(error="Create a profile before commenting.", status=400, form=f)
     try:
-        forum.add_comment(db.get_db(), post_id, f.get("user_id"), f.get("body"))
+        forum.add_comment(db.get_db(), post_id, user.id, f.get("body"))
     except forum.ForumError as exc:
         return render_forum(error=exc.message, status=exc.status, form=f)
     return redirect(url_for("pages.show_forum", _anchor=f"post-{post_id}"))

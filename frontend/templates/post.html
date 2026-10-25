@@ -2,10 +2,10 @@
 {% from "_macros.html" import sky, difficulty_badge %}
 {% from "_plan.html" import plan_view %}
 
-{% block title %}{{ post.title }}: Wonderland{% endblock %}
+{% block title %}{{ post.title }}: Wonderland Forum{% endblock %}
 
 {#
-  Context from pages.show_post(): post (see forum.html), users, limits, error
+  Context from pages.show_post(): post (see forum.html), limits, error
 #}
 
 {% block content %}
@@ -22,7 +22,7 @@
         <section class="relative w-full bg-dirt px-4 pt-14 pb-32 border-t-4 border-[#8a6a4b] min-h-[600px]">
             <div class="relative max-w-4xl mx-auto z-20 text-cream space-y-8">
                 <div class="flex flex-wrap items-center gap-3">
-                    <a href="/forum" class="font-magical text-base font-semibold text-ink hover:text-forest hover:underline">← back to Wonderland</a>
+                    <a href="/forum" class="font-magical text-base font-semibold text-ink hover:text-forest hover:underline">← back to the Wonderland Forum</a>
                     {% if post.difficulty %}{{ difficulty_badge(post.difficulty) }}{% endif %}
                     {% if post.estimated_hours %}<span class="font-magical text-base text-ink">{{ post.estimated_hours|hours }} h</span>{% endif %}
                     {% if post.starter and post.starter.get("original_idea") %}
@@ -63,15 +63,16 @@
                         {% endfor %}
                     </ul>
                     {% endif %}
-                    <form method="post" action="/forum/posts/{{ post.id }}/comments" class="flex flex-col sm:flex-row gap-2 font-magical text-sm">
-                        <select name="user_id" required aria-label="Comment as" class="bg-panel-2 text-cream border border-moss rounded px-2 py-2">
-                            <option value="" disabled {{ '' if current_user else 'selected' }}>Comment as</option>
-                            {% for u in users %}<option value="{{ u.id }}" {{ 'selected' if current_user and u.id|string == current_user.id }}>{{ u.username }}</option>{% endfor %}
-                        </select>
+                    {% if current_user %}
+                    <form method="post" action="/forum/posts/{{ post.id }}/comments" class="flex flex-col sm:flex-row sm:items-center gap-2 font-magical text-sm">
+                        <span class="text-gray-400 whitespace-nowrap">Reply as {{ current_user.username }}</span>
                         <input type="text" name="body" required maxlength="{{ limits.comment }}" placeholder="Add a comment" aria-label="Comment"
                                class="flex-grow bg-panel-2 text-cream border border-moss rounded px-3 py-2">
                         <button type="submit" class="btn-moss">Reply</button>
                     </form>
+                    {% else %}
+                    <p class="font-magical text-sm text-gray-400"><a href="/?new=1" class="text-leaf hover:underline">Create a profile to join in</a>. Comments are posted as the student you are signed in as.</p>
+                    {% endif %}
                 </article>
             </div>
         </section>

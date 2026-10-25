@@ -85,7 +85,6 @@ def test_template_renders_posts_and_escapes_html(conn):
             posts=forum.list_posts(conn),
             filters={"q": "", "kind": "", "difficulty": "", "sort": "newest"},
             sorts=forum.SORT_LABELS,
-            users=forum.list_users(conn),
             projects=forum.list_projects(conn),
             limits={"title": 120, "post": 2000, "comment": 1000},
             error="Title cannot be empty.",
