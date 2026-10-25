@@ -41,6 +41,9 @@ Owners: **App** = application/backend logic (branch `backend-w/o-database`),
 - [ ] **DB** Kai to review the schema, seed and provider (written on the app side to unblock the
       demo; see INTEGRATION.md)
 - [ ] **DB** Write paths (create users, add projects) if the demo needs them; none exist yet
+- [x] Forum (schema v3): `posts` and `comments` tables, demo seed rows, `backend/forum.py`,
+      `/forum` page with "post as" demo user picker, tests on an in-memory database
+- [x] Removed the "Freetail Hackers" footer credit
 
 ## To do: frontend
 

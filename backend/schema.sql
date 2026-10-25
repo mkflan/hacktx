@@ -1,4 +1,4 @@
--- Schema version 2. db.py refuses to start on an app.db made by an older version.
+-- Schema version 3 (v2 plus the forum tables). db.py refuses to start on an app.db made by an older version.
 -- List columns (interests, majors, topic_tags) are comma-separated text; sqlite_provider.py
 -- splits them. Time columns follow json_api's TimeValue: total_hours, hours_per_week and weeks
 -- are different units and are never converted into each other.
@@ -44,4 +44,26 @@ CREATE TABLE IF NOT EXISTS resources (
     PRIMARY KEY (project_id, slug)
 );
 
-PRAGMA user_version = 2;
+-- Forum (schema v3). Posts and comments belong to a user; a post may point at a project.
+-- There is no login: the forum page lets the demo user pick who they are posting as.
+CREATE TABLE IF NOT EXISTS posts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    project_id INTEGER REFERENCES projects (id) ON DELETE SET NULL,
+    title TEXT NOT NULL,
+    body TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS comments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    post_id INTEGER NOT NULL REFERENCES posts (id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    body TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_posts_created ON posts (created_at DESC, id DESC);
+CREATE INDEX IF NOT EXISTS idx_comments_post ON comments (post_id, id);
+
+PRAGMA user_version = 3;

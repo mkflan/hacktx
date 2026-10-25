@@ -46,6 +46,94 @@
                 <path d="M1100,0 Q1050,40 1020,90" fill="none" stroke="#5c3a21" stroke-width="3" />
             </svg>
 
-            {# TODO: forum posts and the "submit your work" form go here. #}
+            {#
+              Context from show_forum() in backend/app.py:
+                posts     list of {id, title, body, created_at, author, author_major, project_id,
+                                   project_name, comments[{id, body, created_at, author}]}
+                users     list of {id, username, major}: the "post as" choices (there is no login)
+                projects  list of {id, name}
+                limits    {title, post, comment} maximum lengths
+                error     message to show after a rejected submit, or None
+                form      the submitted values, to refill the form after an error
+            #}
+            <div class="relative max-w-3xl mx-auto z-20 text-cream pt-12">
+
+                {% if error %}
+                <p role="alert" class="font-magical text-sm text-[#ffb3f0] border border-[#ffb3f0] rounded px-4 py-2 mb-6 text-center">{{ error }}</p>
+                {% endif %}
+
+                <!-- SUBMIT YOUR WORK -->
+                <form method="post" action="/forum/posts" class="bg-[#0d1412] border-2 border-[#2c4238] rounded-md p-6 mb-10 space-y-4 shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
+                    <h2 class="font-mystical text-lg text-[#d4af37] uppercase tracking-wider font-bold">Submit your work</h2>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 font-magical text-xs">
+                        <label class="flex flex-col gap-1 text-[#d4af37]">Post as
+                            <select name="user_id" required class="bg-[#1a2923] text-cream border border-[#2c4238] rounded px-2 py-2">
+                                <option value="" disabled {{ 'selected' if not form.get('user_id') }}>Choose a demo user</option>
+                                {% for u in users %}
+                                <option value="{{ u.id }}" {{ 'selected' if form.get('user_id') == u.id|string }}>{{ u.username }} ({{ u.major }})</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <label class="flex flex-col gap-1 text-[#d4af37]">Project (optional)
+                            <select name="project_id" class="bg-[#1a2923] text-cream border border-[#2c4238] rounded px-2 py-2">
+                                <option value="">None</option>
+                                {% for p in projects %}
+                                <option value="{{ p.id }}" {{ 'selected' if form.get('project_id') == p.id|string }}>{{ p.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                    </div>
+
+                    <label class="flex flex-col gap-1 font-magical text-xs text-[#d4af37]">Title
+                        <input type="text" name="title" required maxlength="{{ limits.title }}" value="{{ form.get('title', '') }}"
+                               class="bg-[#1a2923] text-cream border border-[#2c4238] rounded px-3 py-2">
+                    </label>
+                    <label class="flex flex-col gap-1 font-magical text-xs text-[#d4af37]">What are you working on, or what do you need advice on?
+                        <textarea name="body" required rows="4" maxlength="{{ limits.post }}"
+                                  class="bg-[#1a2923] text-cream border border-[#2c4238] rounded px-3 py-2">{{ form.get('body', '') }}</textarea>
+                    </label>
+
+                    <button type="submit" class="font-magical text-xs font-semibold tracking-wider bg-[#d4af37] text-dirt rounded px-5 py-2 hover:bg-cream transition-colors">Post</button>
+                </form>
+
+                <!-- POSTS -->
+                {% for post in posts %}
+                <article id="post-{{ post.id }}" class="bg-[#0d1412] border-2 border-[#2c4238] rounded-md p-6 mb-6 shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
+                    <h3 class="font-mystical text-sm md:text-base text-[#d4af37] uppercase tracking-wider font-bold mb-1">{{ post.title }}</h3>
+                    <p class="font-magical text-[11px] text-gray-400 mb-3">
+                        {{ post.author }} &middot; {{ post.author_major }} &middot; {{ post.created_at }}
+                        {% if post.project_name %}&middot; about <span class="text-[#d4af37]">{{ post.project_name }}</span>{% endif %}
+                    </p>
+                    <p class="font-magical text-sm text-gray-200 leading-relaxed whitespace-pre-line mb-4">{{ post.body }}</p>
+
+                    {% if post.comments %}
+                    <ul class="space-y-3 border-t border-[#2c4238] pt-4 mb-4">
+                        {% for c in post.comments %}
+                        <li class="font-magical text-xs text-gray-300">
+                            <span class="text-[#d4af37]">{{ c.author }}</span>
+                            <span class="text-gray-500">&middot; {{ c.created_at }}</span>
+                            <p class="whitespace-pre-line mt-1">{{ c.body }}</p>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+
+                    <form method="post" action="/forum/posts/{{ post.id }}/comments" class="flex flex-col sm:flex-row gap-2 font-magical text-xs">
+                        <select name="user_id" required aria-label="Comment as" class="bg-[#1a2923] text-cream border border-[#2c4238] rounded px-2 py-2">
+                            <option value="" disabled selected>Comment as</option>
+                            {% for u in users %}<option value="{{ u.id }}">{{ u.username }}</option>{% endfor %}
+                        </select>
+                        <input type="text" name="body" required maxlength="{{ limits.comment }}" placeholder="Add a comment" aria-label="Comment"
+                               class="flex-grow bg-[#1a2923] text-cream border border-[#2c4238] rounded px-3 py-2">
+                        <button type="submit" class="font-semibold tracking-wider bg-[#2c4238] text-cream rounded px-4 py-2 hover:bg-[#d4af37] hover:text-dirt transition-colors">Reply</button>
+                    </form>
+                </article>
+                {% else %}
+                <div class="bg-[#0d1412] border-2 border-[#2c4238] rounded-md p-8 text-center font-magical text-sm text-gray-300">
+                    No posts yet. Be the first to share your work.
+                </div>
+                {% endfor %}
+            </div>
         </section>
 {% endblock %}

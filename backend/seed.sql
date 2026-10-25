@@ -92,3 +92,25 @@ INSERT OR IGNORE INTO resources (project_id, slug, title, url, kind, provider,
     topic_tags, content_excerpt)
 VALUES (10, 'python-argparse', 'argparse: command-line parsing', 'https://docs.python.org/3/library/argparse.html', 'documentation', 'Python',
     'python, command line tools', NULL);
+
+-- Forum demo posts and comments (fictional, from the two demo users). Fixed IDs and
+-- timestamps keep this idempotent.
+INSERT OR IGNORE INTO posts (id, user_id, project_id, title, body, created_at)
+VALUES (1, 1, 1, 'Soil sensor readings are noisy, any tips?',
+    'I wired the analog moisture sensor to 3.3 V and the readings jump around by about 10%. Averaging helped a little. Has anyone calibrated theirs against a dry and a wet sample?',
+    '2026-10-20 14:05:00');
+INSERT OR IGNORE INTO posts (id, user_id, project_id, title, body, created_at)
+VALUES (2, 2, 5, 'Looking for feedback on my flashcard scheduler',
+    'My spaced-repetition app uses fixed intervals of 1, 3, 7 and 14 days and resets a card to day 1 when it is missed. Does that seem reasonable, or should I try something adaptive?',
+    '2026-10-21 09:30:00');
+INSERT OR IGNORE INTO posts (id, user_id, project_id, title, body, created_at)
+VALUES (3, 2, NULL, 'Anyone want to team up on a data visualization project?',
+    'I am a CS major interested in data visualization and sensors. If you have sensor data and want to chart it, let us talk.',
+    '2026-10-22 18:45:00');
+
+INSERT OR IGNORE INTO comments (id, post_id, user_id, body, created_at)
+VALUES (1, 1, 2, 'Try taking the median of ten samples instead of the mean. It ignores the spikes.',
+    '2026-10-20 16:20:00');
+INSERT OR IGNORE INTO comments (id, post_id, user_id, body, created_at)
+VALUES (2, 3, 1, 'I have a week of soil sensor logs. Would love a chart of them.',
+    '2026-10-23 08:10:00');

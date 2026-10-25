@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, redirect, render_template, request, url_for
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 for _name in ("env.txt", ".env"):
@@ -16,6 +16,7 @@ for _name in ("env.txt", ".env"):
 os.environ.setdefault("DATA_MODE", "injected")
 
 import db  # noqa: E402
+import forum  # noqa: E402
 from json_api import init_json_api  # noqa: E402
 from json_api.config import Settings  # noqa: E402
 from json_api.dependencies import get_context  # noqa: E402
@@ -54,6 +55,45 @@ def display_user_dashboard(user_id):
         warnings=[w.model_dump() for w in warnings],
         data_source=ctx.data_source,
     )
+
+def render_forum(error=None, status=200, form=None):
+    conn = db.get_db()
+    return render_template(
+        "forum.html",
+        posts=forum.list_posts(conn),
+        users=forum.list_users(conn),
+        projects=forum.list_projects(conn),
+        limits={"title": forum.TITLE_MAX, "post": forum.POST_MAX, "comment": forum.COMMENT_MAX},
+        error=error,
+        form=form or {},
+    ), status
+
+
+@app.route("/forum")
+def show_forum():
+    return render_forum()
+
+
+@app.route("/forum/posts", methods=["POST"])
+def create_forum_post():
+    f = request.form
+    try:
+        post_id = forum.create_post(
+            db.get_db(), f.get("user_id"), f.get("title"), f.get("body"), f.get("project_id")
+        )
+    except forum.ForumError as exc:
+        return render_forum(error=exc.message, status=exc.status, form=f)
+    return redirect(url_for("show_forum", _anchor=f"post-{post_id}"))
+
+
+@app.route("/forum/posts/<int:post_id>/comments", methods=["POST"])
+def create_forum_comment(post_id):
+    f = request.form
+    try:
+        forum.add_comment(db.get_db(), post_id, f.get("user_id"), f.get("body"))
+    except forum.ForumError as exc:
+        return render_forum(error=exc.message, status=exc.status, form=f)
+    return redirect(url_for("show_forum", _anchor=f"post-{post_id}"))
 
 
 if __name__ == "__main__":

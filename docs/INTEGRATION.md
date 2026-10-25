@@ -7,7 +7,7 @@ Two separate pieces live in `backend/`. They are connected in one place (`app.py
 | Path | What it is | Owner |
 |---|---|---|
 | `backend/app.py` | The Flask web app: page routes such as `/` and `/dashboard/<user_id>` that serve populated pages to the user | Database / Flask teammate |
-| `backend/db.py`, `backend/schema.sql`, `backend/seed.sql` | SQLite connection, schema (version 2) and demo rows | Database / Flask teammate |
+| `backend/db.py`, `backend/schema.sql`, `backend/seed.sql` | SQLite connection, schema (version 3) and demo rows | Database / Flask teammate |
 | `backend/sqlite_provider.py` | The SQLite `ProjectDataProvider`: read-only queries and the row-to-DTO mapping | Database / Flask teammate |
 | `backend/json_api/` | The JSON integration layer: `/api/...` endpoints, ranking, LLM generation and the `ProjectDataProvider` contract. It returns JSON only and never renders pages or opens SQLite | Application |
 | `backend/json_api/dev/` | Fake data for tests and local demos only | Application |
@@ -139,7 +139,7 @@ that parses is not evidence). Resource IDs must be stable, and may be scoped und
 ID (`101/r1`). `metadata` (author, year, DOI) is optional and only for values a real source
 supplied.
 
-## How the SQLite tables map (schema version 2)
+## How the SQLite tables map (schema version 3)
 
 | Column | DTO field | Rule |
 |---|---|---|
@@ -151,9 +151,14 @@ supplied.
 | `projects.difficulty` | `difficulty` | `beginner`, `intermediate`, `advanced` or NULL. |
 | `resources (project_id, slug)` | `resources[].id` | `"<project_id>/<slug>"`, stable as long as the slug is. `url` NULL plus `content_excerpt` is a text guide. |
 
-`schema.sql` stamps the database with `PRAGMA user_version = 2`. An `app.db` made by the first
+`schema.sql` stamps the database with `PRAGMA user_version = 3`. An `app.db` made by the first
 skeleton (version 0) is refused with a message to delete it, instead of failing on missing
 columns later. Real migrations are not needed yet: `app.db` only holds local dev data.
+
+Schema version 3 adds the forum tables, `posts` and `comments`. They are not part of
+`ProjectDataProvider`: `backend/forum.py` queries them directly through `db.get_db()` and the
+routes live in `app.py` (`/forum`, `POST /forum/posts`, `POST /forum/posts/<id>/comments`).
+There is no login, so the forum page asks which demo user is posting.
 
 ## Fields that are not database columns
 

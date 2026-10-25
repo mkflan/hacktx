@@ -7,7 +7,7 @@ DATABASE_PATH = Path(__file__).parent / "app.db"
 
 SCHEMA = (Path(__file__).parent / "schema.sql").read_text(encoding="utf-8")
 SEED = (Path(__file__).parent / "seed.sql").read_text(encoding="utf-8")
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 
 def get_db():
