@@ -31,13 +31,16 @@ Owners: **App** = application/backend logic (branch `backend-w/o-database`),
 
 ## To do: integration
 
-- [ ] **DB** Answer the open mapping questions in [INTEGRATION.md](INTEGRATION.md#open-mapping-questions-for-the-database-teammate)
-- [ ] **DB** Add a time commitment column for users and timeline + resources for projects
-- [ ] **DB** Write a `ProjectDataProvider` implementation over SQLite (your module, your queries)
-- [ ] **DB** Persist the two demo users (Alex, Maya) and some projects with your own IDs
-- [ ] **Team** Call `init_json_api(app, data_provider=...)` from the Flask app in `backend/app.py`
-- [ ] **Team** Merge `backend-w/o-database` with `backend` (no overlapping files today)
-- [ ] **App** Re-run the test suite plus a smoke test against the real provider once it exists
+- [x] Schema v2: user time commitment; project majors, interests, timeline, difficulty;
+      resources table. Old `app.db` files are refused with a clear message
+- [x] `seed.sql`: the two demo users and ten projects from the fixtures (idempotent)
+- [x] `sqlite_provider.py`: `ProjectDataProvider` over SQLite, `data_source: "sqlite"`
+- [x] `app.py` loads `env.txt`, passes the SQLite provider to `init_json_api`, runs on :8000
+- [x] Tests on an in-memory database (seed matches fixtures, same ranking as fake mode, 503 on a
+      broken connection) plus a smoke run of `app.py` against a real `app.db` (mock LLM)
+- [ ] **DB** Kai to review the schema, seed and provider (written on the app side to unblock the
+      demo; see INTEGRATION.md)
+- [ ] **DB** Write paths (create users, add projects) if the demo needs them; none exist yet
 
 ## To do: frontend
 
@@ -51,11 +54,11 @@ Owners: **App** = application/backend logic (branch `backend-w/o-database`),
 
 ## To do: real model and demo
 
-- [ ] **Team** First live Gemini call has never happened. The request schema is checked against
-      the models offline, but Gemini's own acceptance of it (size and feature limits) is unproven
-
-- [ ] **Team** Put `GEMINI_API_KEY` in `env.txt`, set `LLM_MODE=gemini`, try one live call
-      (costs money; not done yet, all LLM tests so far use a fake client)
+- [x] First live Gemini calls (2026-10-24) through `app.py` + SQLite on `gemini-3.6-flash`:
+      generate_ideas 200 in 9 s, elaborate_idea 200 in 19 s; the schema is accepted
+- [ ] **Team** `gemini-3.8-flash` (the default) answered `503 high demand` or timed out at 45 s
+      every time on 2026-10-24. If that continues, set `GEMINI_MODEL=gemini-3.6-flash` in `env.txt`
+- [ ] **Team** Set `LLM_MODE=gemini` in `env.txt` (it is still `mock`)
 - [ ] **Team** Tune `GEMINI_THINKING` if live calls are too slow for the demo
 - [ ] **Team** Rehearse: Explore -> Alex recommendations -> switch to Maya -> generate ideas ->
       elaborate a student idea into a full guide

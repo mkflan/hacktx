@@ -14,15 +14,19 @@ Project details open inside the current tab. A card can also be **personalized**
 project is loaded and a tailored plan is generated for the selected user, without changing the
 shared record.
 
-This branch holds the **application logic only**. SQLite, schema, queries and seeds belong to
-the database teammate (see [INTEGRATION.md](docs/INTEGRATION.md)). Until their provider is plugged
-in, the app runs on clearly labeled in-memory fixtures (`data_source: "fake"`). Task status is
-tracked in [TODO.md](docs/TODO.md).
+`backend/app.py` is the one app: page routes, the SQLite database and the `/api/...` routes.
+Data comes from SQLite (`data_source: "sqlite"`), seeded with two demo students and ten sample
+projects; `DATA_MODE=fake` switches to the in-memory fixtures instead. See
+[INTEGRATION.md](docs/INTEGRATION.md). Task status is tracked in [TODO.md](docs/TODO.md).
 
 ## Layout
 
 ```
-backend/json_api/        application package (Flask + Pydantic v2)
+backend/app.py           the Flask app: page routes + init_json_api(app, SQLite provider)
+backend/db.py            SQLite connection, schema version check, demo seeding
+backend/schema.sql       tables (users, projects, resources); seed.sql: demo rows
+backend/sqlite_provider.py  ProjectDataProvider over SQLite (rows -> json_api DTOs)
+backend/json_api/        application package (Flask + Pydantic v2), never opens SQLite
   main.py                  create_app() / init_json_api(): the one place providers are injected
   contracts.py             DTOs + ProjectDataProvider (4 read-only methods)
   dependencies.py          provider access, 503 wrapping for data failures
@@ -30,7 +34,7 @@ backend/json_api/        application package (Flask + Pydantic v2)
   services/                catalog, ranking, timefit, normalize, resources, generation, cache
   llm/                     base (interface), mock, gemini_provider, validation, prompts/
   dev/                     fixtures + InMemoryProjectDataProvider (not database seeds)
-backend/tests/             pytest, no database and no network
+backend/tests/           pytest; SQLite only in memory, no network, no paid calls
 ```
 
 ## Setup (Windows, Python 3.14)
@@ -44,8 +48,13 @@ py -3.14 -m venv .venv
 
 ```powershell
 cd backend
-..\.venv\Scripts\python -m json_api        # http://127.0.0.1:8000
+..\.venv\Scripts\python app.py            # http://127.0.0.1:8000, SQLite at backend/app.db
 ```
+
+The first run creates `backend/app.db` (gitignored) and seeds the demo data; the users are
+`GET /api/users` IDs `1` (alex_demo) and `2` (maya_demo). If an older `app.db` exists, the app
+refuses to start and asks you to delete it. `python -m json_api` still runs the JSON API alone
+on fixtures.
 
 Tests and lint, from the repo root:
 
@@ -61,7 +70,7 @@ gitignored; copy `env.example.txt`).
 
 | Variable | Values | Default | Meaning |
 |---|---|---|---|
-| `DATA_MODE` | `fake`, `injected` | `fake` | `fake` uses the in-memory fixtures. `injected` needs a provider passed to `init_json_api()`; without one every data route returns `503 DATA_PROVIDER_NOT_CONFIGURED`. It never falls back to fake data. |
+| `DATA_MODE` | `fake`, `injected` | `injected` in `app.py`, `fake` in `python -m json_api` | `injected` reads SQLite through `sqlite_provider.py`. `fake` uses the in-memory fixtures. Without a provider every data route returns `503 DATA_PROVIDER_NOT_CONFIGURED`; it never falls back to fake data. |
 | `LLM_MODE` | `mock`, `gemini` | `mock` | `mock` is a deterministic offline generator labeled `generation_mode: "mock"`. `gemini` calls the Gemini API. |
 | `GEMINI_API_KEY` | key | none | Required for `LLM_MODE=gemini`. Get one at Google AI Studio. Server-side only, never sent to the browser. |
 | `GEMINI_MODEL` | model ID | `gemini-3.8-flash` | |
@@ -185,6 +194,5 @@ requests sent at the same moment may both reach the model.
 
 ## Not done here
 
-This branch does not implement or verify a SQLite integration, persisted demo users, saved
-generated projects or persistence across restarts. Those are the database teammate's work and
-are listed in [TODO.md](docs/TODO.md).
+Generated plans are not saved (`persisted: false`), and there is no history yet. The database
+is read-only from the app's side. Open items are in [TODO.md](docs/TODO.md).

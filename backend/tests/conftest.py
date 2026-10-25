@@ -1,4 +1,5 @@
-"""Shared test helpers. No SQLite, no network, no paid calls: everything is injected."""
+"""Shared test helpers. No network, no paid calls: everything is injected. SQLite only in
+memory (test_sqlite_provider.py), never a file."""
 
 import pytest
 

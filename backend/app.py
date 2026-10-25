@@ -1,18 +1,34 @@
+"""The Flask app: page routes, the SQLite database and the json_api /api/... routes.
+
+Run from backend/:  ..\\.venv\\Scripts\\python app.py   (serves http://127.0.0.1:8000)
+"""
+
+import os
+from pathlib import Path
+
+from dotenv import load_dotenv
 from flask import Flask, jsonify
 
-import db
-from json_api import init_json_api
-from json_api.dependencies import get_context
-from json_api.errors import AppError
-from json_api.services import catalog, ranking
+REPO_ROOT = Path(__file__).resolve().parent.parent
+for _name in ("env.txt", ".env"):
+    load_dotenv(REPO_ROOT / _name, override=False)
+# This app reads SQLite unless DATA_MODE=fake asks for json_api's offline fixtures.
+os.environ.setdefault("DATA_MODE", "injected")
 
+import db  # noqa: E402
+from json_api import init_json_api  # noqa: E402
+from json_api.config import Settings  # noqa: E402
+from json_api.dependencies import get_context  # noqa: E402
+from json_api.errors import AppError  # noqa: E402
+from json_api.services import catalog, ranking  # noqa: E402
+from sqlite_provider import SQLiteProjectDataProvider  # noqa: E402
+
+settings = Settings.from_env()
 app = Flask(__name__)
 db.init_app(app)
 
-# TODO(database): pass data_provider=<your SQLite-backed ProjectDataProvider> here. Without one,
-# json_api serves its FAKE fixture data (responses say data_source="fake") and the users table
-# is not read. See docs/INTEGRATION.md.
-init_json_api(app)
+data_provider = None if settings.data_mode == "fake" else SQLiteProjectDataProvider(db.get_db)
+init_json_api(app, data_provider=data_provider, settings=settings)
 
 
 @app.route("/")
@@ -22,7 +38,7 @@ def index():
 
 @app.route("/dashboard/<user_id>")
 def display_user_dashboard(user_id):
-    # json_api IDs are opaque strings (fake mode uses "fixture-ece" and "fixture-cs").
+    # IDs are strings: "1" and "2" are the seeded demo users ("fixture-ece" in fake mode).
     ctx = get_context()
     try:
         user = ctx.data.get_user(user_id)
@@ -46,4 +62,4 @@ def display_user_dashboard(user_id):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host=settings.host, port=settings.port, debug=True)

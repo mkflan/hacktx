@@ -7,18 +7,24 @@ Two separate pieces live in `backend/`. They are connected in one place (`app.py
 | Path | What it is | Owner |
 |---|---|---|
 | `backend/app.py` | The Flask web app: page routes such as `/` and `/dashboard/<user_id>` that serve populated pages to the user | Database / Flask teammate |
-| `backend/db.py`, `backend/schema.sql` | SQLite connection and schema | Database / Flask teammate |
+| `backend/db.py`, `backend/schema.sql`, `backend/seed.sql` | SQLite connection, schema (version 2) and demo rows | Database / Flask teammate |
+| `backend/sqlite_provider.py` | The SQLite `ProjectDataProvider`: read-only queries and the row-to-DTO mapping | Database / Flask teammate |
 | `backend/json_api/` | The JSON integration layer: `/api/...` endpoints, ranking, LLM generation and the `ProjectDataProvider` contract. It returns JSON only and never renders pages or opens SQLite | Application |
 | `backend/json_api/dev/` | Fake data for tests and local demos only | Application |
 | `backend/tests/` | Tests for `json_api` (fake data and fake LLM, no database, no network) | Application |
 | `docs/INTEGRATION.md` | This file | Both |
 | `docs/TODO.md` | Task status | Both |
 
-How they connect: `app.py` does `from json_api import init_json_api` and calls
-`init_json_api(app, data_provider=...)` to add the `/api/...` routes to the Flask app. For pages that
-arrive already populated, `app.py` can also call the functions in `json_api.services` directly
-inside a page route instead of going through HTTP. Until `app.py` is wired up, only its own routes
-exist; run the JSON API on its own with `python -m json_api` (from `backend/`).
+How they connect: `app.py` calls
+`init_json_api(app, data_provider=SQLiteProjectDataProvider(db.get_db))`, which adds the
+`/api/...` routes to the Flask app, reading SQLite through one connection per request. Page
+routes such as `/dashboard/<user_id>` call `json_api.services` directly instead of going through
+HTTP. `DATA_MODE=fake` swaps in the in-memory fixtures. `python -m json_api` (from `backend/`)
+still runs the JSON API alone on fixtures.
+
+Note: the schema, seed and provider were written on the application side (Rashmi and Viraj's
+decision) to unblock the demo. Kai: please review them and change anything; the tests in
+`backend/tests/test_sqlite_provider.py` will tell you if the mapping still fits the contract.
 
 ## Who owns what
 
@@ -133,21 +139,21 @@ that parses is not evidence). Resource IDs must be stable, and may be scoped und
 ID (`101/r1`). `metadata` (author, year, DOI) is optional and only for values a real source
 supplied.
 
-## Open mapping questions for the database teammate
+## How the SQLite tables map (schema version 2)
 
-These are not blockers; the app works today on fixtures.
+| Column | DTO field | Rule |
+|---|---|---|
+| `users.id`, `projects.id` (integers) | `id` | Sent as strings (`"1"`). A non-numeric ID is simply not found (404). |
+| `users.interests`, `projects.majors`, `projects.interests`, `resources.topic_tags` | lists | Comma-separated text, trimmed; empty parts and duplicates dropped. Items cannot contain commas. |
+| `users.time_amount/unit/raw` | `time_commitment` | Unit is `total_hours`, `hours_per_week`, `weeks` or `unknown` (a `CHECK` constraint). |
+| `projects.timeline_*` | `timeline` | Same units. `timeline_estimated_hours` only when the source states the workload; `total_hours` fills it itself. |
+| `projects.scope` | `description` | Nullable. |
+| `projects.difficulty` | `difficulty` | `beginner`, `intermediate`, `advanced` or NULL. |
+| `resources (project_id, slug)` | `resources[].id` | `"<project_id>/<slug>"`, stable as long as the slug is. `url` NULL plus `content_excerpt` is a text guide. |
 
-1. **IDs:** integer `users.id` is fine. Projects use `name` as the primary key in
-   `schema.sql`; will there be a separate stable project ID? Names can change.
-2. **Interests and majors:** `users.interests` is comma-separated text. The mapping should
-   split it into a list. Will projects store majors and interests the same way?
-3. **Time commitment:** the current `users` table has no time column. What unit will it be
-   (total hours, hours per week, weeks)? If free text, map it to `unit: "unknown"` with `raw`.
-4. **Project timeline:** what does "timeline" mean: total work hours, or calendar weeks? If
-   weeks, is there a workload estimate?
-5. **Resources:** links, text guides, or both? Is there a stable ID per resource?
-6. **Nulls:** which fields can be empty? (All optional DTO fields accept null or empty.)
-7. **Project `scope` column:** should it map to `description`?
+`schema.sql` stamps the database with `PRAGMA user_version = 2`. An `app.db` made by the first
+skeleton (version 0) is refused with a message to delete it, instead of failing on missing
+columns later. Real migrations are not needed yet: `app.db` only holds local dev data.
 
 ## Fields that are not database columns
 
@@ -156,19 +162,20 @@ arrive per request as optional `preferences`. They are not stored and need no sc
 When missing, generated plans state their assumptions and ranking does not use difficulty.
 `difficulty` and `description` on projects are optional; null is handled.
 
-## Demo users to persist (your IDs, your schema)
+## Demo data
 
-The fixtures in [backend/json_api/dev/fixtures.py](../backend/json_api/dev/fixtures.py) are
-fictional. To get the same demo from SQLite, create equivalent records your own way:
+`seed.sql` inserts the two fictional students and the ten sample projects from
+[fixtures.py](../backend/json_api/dev/fixtures.py) with fixed IDs and `INSERT OR IGNORE`, so it
+runs safely on every start (`app.config["SEED_DEMO_DATA"] = False` turns it off). It was
+generated from the fixtures, so both modes show the same demo:
 
-| username | major | interests | time commitment |
+| ID | username | major | time commitment |
 |---|---|---|---|
-| alex_demo | Electrical and Computer Engineering | sensors, plants, sustainability | 12 total hours |
-| maya_demo | Computer Science | language learning, web apps, data visualization | 20 total hours |
+| `1` | alex_demo | Electrical and Computer Engineering | 12 total hours |
+| `2` | maya_demo | Computer Science | 20 total hours |
 
-The fixture IDs `fixture-ece` and `fixture-cs` are for fake mode only. Use whatever IDs your
-database assigns; the frontend gets them from `GET /api/users`. The fixture file also has ten
-sample projects you may copy if useful.
+The fixture IDs `fixture-ece` and `fixture-cs` exist only in fake mode. The frontend should
+always take IDs from `GET /api/users`.
 
 ## Saving generated plans
 

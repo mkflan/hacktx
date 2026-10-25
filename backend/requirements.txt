@@ -1,1 +1,2 @@
-flask
+# Same pinned set as the repo root (Flask, Pydantic, google-genai, python-dotenv, pytest, ruff).
+-r ../requirements.txt
