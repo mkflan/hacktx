@@ -23,8 +23,10 @@ Wonderland Forum. Plan in docs/SPEC.md, run sheet in docs/DEMO.md.
   .env GEMINI_MODEL was updated to match (DEMO.md step 1 told it to pin 3.6).
 - SerpApi: the "half my quota in one search" was the enrichment script (default budget was 80
   per run; 161 used this month, all enrichment; 89 plan searches + 1000 extra credits left).
-  Default budget is now 20 and the script prints the balance (free account.json call) first.
-  Per action: dig 2, starter 2, mentor turn with dig 2; repeats free. Search quality unchanged.
+  A budget-20 default and balance check were added, then reverted at Rashmi's request (she saw
+  lower search quality); the script is back to its original default of 80.
+  Per action: dig 2, starter 2, mentor turn with dig 2; repeats free.
+- Text size in the Accessibility menu is a minus / plus pair (100-150%, steps of 10).
 - Tests: 196 pass (15 new or changed, written first). ruff clean. Pages checked in a browser.
 
 ## Current state
@@ -49,7 +51,6 @@ Wonderland Forum. Plan in docs/SPEC.md, run sheet in docs/DEMO.md.
 - frontend/templates/{index,forum,post,project,chat,dashboard}.html: copy, forms, layout
 - backend/pages.py, backend/forum.py: session user for posts and comments; all users in nav
 - backend/json_api/config.py, env.example.txt: model defaults
-- backend/serp.py, scripts/enrich_catalog.py: account balance, budget 20
 - backend/tests/test_{pages,forum,gemini_provider,search}.py: new and updated tests
 - README.md, docs/SPEC.md, docs/DEMO.md, docs/TODO.md: names, models, costs, run sheet
 

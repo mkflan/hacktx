@@ -14,8 +14,8 @@
 5. SerpApi: 250 plan searches a month plus the 1000 extra credits on the account. One "Dig
    deeper" costs 2 searches, one starter 2, one mentor turn with "Dig deeper" ticked 2; repeats
    of the same query are free (cached). The 161 used so far all came from the enrichment script
-   (`scripts/enrich_catalog.py`, default budget now 20 per run; it prints the balance before it
-   spends). Check the balance at https://serpapi.com/dashboard.
+   (`scripts/enrich_catalog.py --max-searches N`, default 80 per run). Check the balance at
+   https://serpapi.com/dashboard.
 6. Gemini calls take 3-10 s on 3.5 Flash-Lite. Say what is happening while it thinks ("Gemini is writing a plan
    that fits twelve hours and a beginner").
 

@@ -30,7 +30,7 @@ Owners: **Back** = backend (Rashmi and Viraj), **Front** = pages and templates, 
       lists every profile including ones made on the landing page; forum posts and comments
       are made only as the signed-in student; "Dig deeper" sits under the materials;
       Gemini 3.5 Flash-Lite first with 3.6 Flash as fallback (2.5 Flash is gone);
-      enrichment script budget 20 by default and shows the SerpApi balance first
+      text size is a minus / plus pair in the Accessibility menu
 
 ## Before judging
 

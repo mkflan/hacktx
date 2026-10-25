@@ -23,9 +23,11 @@
         function applyTextScale(pct) {
             pct = clampTextScale(pct);
             document.documentElement.style.setProperty("--text-scale", String(pct / 100));
-            const range = document.getElementById("textSizeRange"), out = document.getElementById("textSizeValue");
-            if (range) range.value = pct;
+            const out = document.getElementById("textSizeValue");
+            const smaller = document.getElementById("textSmaller"), bigger = document.getElementById("textBigger");
             if (out) out.textContent = pct + "%";
+            if (smaller) smaller.disabled = pct <= 100;
+            if (bigger) bigger.disabled = pct >= 150;
             try { localStorage.setItem(TEXT_SCALE_KEY, String(pct)); } catch (e) {}
         }
         function savedTextScale() {
@@ -120,13 +122,15 @@
                     </button>
                     <div id="a11yPanel" role="dialog" aria-label="Accessibility and demo settings" hidden
                          class="absolute right-0 mt-2 w-72 bg-cream border border-purple-300/60 rounded-lg p-4 space-y-4 text-slate-800 z-50">
-                        <div>
-                            <label for="textSizeRange" class="flex justify-between font-semibold">
-                                <span>Text size</span><span id="textSizeValue" aria-live="polite">100%</span>
-                            </label>
-                            <input id="textSizeRange" type="range" min="100" max="150" step="5" value="100"
-                                   aria-valuemin="100" aria-valuemax="150" class="w-full accent-forest cursor-pointer">
-                            <div class="flex justify-between text-xs text-slate-600" aria-hidden="true"><span>A</span><span class="text-base">A</span></div>
+                        <div role="group" aria-labelledby="textSizeLabel" class="flex items-center justify-between gap-3">
+                            <span id="textSizeLabel" class="font-semibold">Text size</span>
+                            <div class="flex items-center gap-2">
+                                <button type="button" id="textSmaller" aria-label="Smaller text" title="Smaller text"
+                                        class="w-9 h-9 rounded-full border border-purple-300/60 bg-white text-lg font-bold leading-none hover:bg-forest hover:text-cream disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">&minus;</button>
+                                <span id="textSizeValue" aria-live="polite" class="w-12 text-center tabular-nums">100%</span>
+                                <button type="button" id="textBigger" aria-label="Larger text" title="Larger text"
+                                        class="w-9 h-9 rounded-full border border-purple-300/60 bg-white text-lg font-bold leading-none hover:bg-forest hover:text-cream disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">+</button>
+                            </div>
                         </div>
                         {% if demo_users %}
                         <form method="post" action="/session/{{ current_user.id if current_user else demo_users[0].id }}" class="space-y-1 border-t border-purple-300/40 pt-3">
@@ -168,9 +172,10 @@
             btn.addEventListener("click", () => setOpen(panel.hidden));
             document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !panel.hidden) { setOpen(false); btn.focus(); } });
             document.addEventListener("click", (e) => { if (!panel.hidden && !root.contains(e.target)) setOpen(false); });
-            const range = document.getElementById("textSizeRange");
-            range.addEventListener("input", () => applyTextScale(range.value));
-            applyTextScale(savedTextScale());  // now the slider exists: show the saved value on it
+            const current = () => Math.round(parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--text-scale") || "1") * 100);
+            document.getElementById("textSmaller").addEventListener("click", () => applyTextScale(current() - 10));
+            document.getElementById("textBigger").addEventListener("click", () => applyTextScale(current() + 10));
+            applyTextScale(savedTextScale());  // now the buttons exist: show the saved value on them
         })();
 
         /* Mouse wheel over a shelf scrolls it sideways; at either end the page scrolls as usual. */

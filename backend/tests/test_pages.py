@@ -222,7 +222,9 @@ def test_nav_switcher_lists_a_profile_created_on_the_landing_page(client):
 def test_nav_hides_test_users_and_text_size_behind_the_accessibility_button(client):
     page = client.get("/").get_data(as_text=True)
     assert 'aria-controls="a11yPanel"' in page and 'id="a11yPanel"' in page
-    assert 'id="textSizeRange"' in page and 'type="range"' in page
+    assert 'id="textSmaller"' in page and 'id="textBigger"' in page
+    assert 'aria-label="Smaller text"' in page and 'aria-label="Larger text"' in page
+    assert 'type="range"' not in page  # the slider became minus / plus buttons
     assert "data-text-size=" not in page  # the old A / A+ / A++ buttons are gone
     client.post("/session/1")
     page = client.get("/").get_data(as_text=True)
