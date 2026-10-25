@@ -76,7 +76,8 @@ def test_requires_explicit_api_key():
 
 def test_real_client_builds_without_network():
     real = GeminiLLMProvider(SETTINGS)
-    assert real.model_id == "gemini-3.6-flash"
+    assert real.model_id == "gemini-3.5-flash-lite"  # fast and not overloaded, 2026-10-25
+    assert SETTINGS.gemini_fallback_model == "gemini-3.6-flash"
 
 
 def server_error(code=503):
@@ -87,12 +88,23 @@ def test_unavailable_main_model_falls_back_once():
     llm, messages = provider([server_error(), reply(valid_plan())])
     draft = llm.elaborate_idea(ALEX, None, "soil sensor", BANK)
     assert isinstance(draft, ProjectPlanDraft)
-    assert [r["model"] for r in messages.requests] == ["gemini-3.6-flash", "gemini-2.5-flash"]
-    assert llm.last_model == "gemini-2.5-flash" and llm.model_id == "gemini-3.6-flash"
-    # thinking_level is a Gemini 3 setting; the 2.5 fallback gets the config without it.
+    models = [r["model"] for r in messages.requests]
+    assert models == ["gemini-3.5-flash-lite", "gemini-3.6-flash"]
+    assert llm.last_model == "gemini-3.6-flash" and llm.model_id == "gemini-3.5-flash-lite"
+    # Both are Gemini 3 models, so both calls keep the thinking level and the schema.
     assert messages.requests[0]["config"].thinking_config.thinking_level is not None
-    assert messages.requests[1]["config"].thinking_config is None
+    assert messages.requests[1]["config"].thinking_config.thinking_level is not None
     assert messages.requests[1]["config"].response_json_schema is not None
+
+
+def test_a_gemini_2_fallback_is_called_without_a_thinking_level():
+    settings = Settings(
+        llm_mode="gemini", gemini_api_key="k", gemini_fallback_model="gemini-2.5-flash"
+    )
+    llm, messages = provider([server_error(), reply(valid_plan())], settings)
+    llm.elaborate_idea(ALEX, None, "soil sensor", BANK)
+    assert messages.requests[1]["model"] == "gemini-2.5-flash"
+    assert messages.requests[1]["config"].thinking_config is None  # 2.x rejects thinking_level
 
 
 def test_fallback_failing_too_raises_the_fallbacks_error():
@@ -132,7 +144,7 @@ def test_valid_output_needs_one_call_with_structured_output_request():
     assert len(messages.requests) == 1
     sent = messages.requests[0]
     config = sent["config"]
-    assert sent["model"] == "gemini-3.6-flash"
+    assert sent["model"] == "gemini-3.5-flash-lite"
     assert config.thinking_config.thinking_level.value == "MEDIUM"
     assert config.response_mime_type == "application/json"
     assert config.response_json_schema["type"] == "object"

@@ -29,9 +29,11 @@ class Settings:
     llm_mode: str = "mock"
     data_mode: str = "fake"
     gemini_api_key: str | None = field(default=None, repr=False)
-    gemini_model: str = "gemini-3.6-flash"  # 3.8 was overloaded on every live call 2026-10-24
+    # 3.5 Flash-Lite answered a chat in 4 s and a starter in 9 s on 2026-10-25; 3.6 and 3.8 Flash
+    # returned 503 (overloaded) on and off, and 2.5 Flash is gone (404 for new users).
+    gemini_model: str = "gemini-3.5-flash-lite"
     # Tried once when the main model is unavailable, rate limited or times out. "" disables.
-    gemini_fallback_model: str = "gemini-2.5-flash"
+    gemini_fallback_model: str = "gemini-3.6-flash"
     gemini_thinking: str = "medium"
     serpapi_api_key: str | None = field(default=None, repr=False)
     # Signs the session cookie that remembers the current demo user. Override with SECRET_KEY.
