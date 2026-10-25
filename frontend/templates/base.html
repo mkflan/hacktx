@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}HackTX: The Rabbit Hole Research Hub{% endblock %}</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Space+Grotesk:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+
+    <style type="text/tailwindcss">
+        @import "tailwindcss";
+        @theme {
+            --color-cream: #fffbf2;
+            --color-pink: #ffb3f0;
+            --color-fuschia: #e1b6f2;
+            --color-purple: #adb8d6;
+            --color-blue: #b1e6f3;
+            --color-dirt: #2b1810;
+            --color-grass: #5c7c65;
+
+            --font-cursive: 'Great Vibes', cursive;
+            --font-handwriting: 'Satisfy', cursive;
+            --font-mystical: 'Cinzel Decorative', serif;
+            --font-magical: 'Space Grotesk', sans-serif;
+        }
+
+        body {
+            background-color: #fffbf2;
+        }
+    </style>
+
+    {% block head %}{% endblock %}
+</head>
+<body class="font-mystical min-h-full flex flex-col text-[#1e293b]">
+
+    <!-- NAVBAR -->
+    <nav class="bg-purple/80 backdrop-blur sticky top-0 z-50 border-b border-purple-300/30">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <span>🐇</span>
+                <span class="text-lg md:text-xl text-slate-800">Research Rabbit</span>
+            </div>
+            <div class="space-x-6 text-xs md:text-sm font-semibold tracking-wider">
+                <a href="/#generator" class="hover:text-white transition-colors">Generator</a>
+                <a href="/#tracker" class="hover:text-white transition-colors">Tracker Board</a>
+                <a href="/forum" class="hover:text-white transition-colors">Wonderland</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT WRAPPER -->
+    <main class="flex-grow">
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block after_main %}{% endblock %}
+
+    <!-- FOOTER -->
+    <footer class="border-t border-purple-900/30 py-8 text-center text-xs text-slate-500 font-mono bg-[#fffbf2]">
+        <p>Made with ♥ by Freetail Hackers &mdash; HackTX 2026</p>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 for _name in ("env.txt", ".env"):
@@ -20,21 +20,19 @@ from json_api import init_json_api  # noqa: E402
 from json_api.config import Settings  # noqa: E402
 from json_api.dependencies import get_context  # noqa: E402
 from json_api.errors import AppError  # noqa: E402
-from json_api.services import catalog, ranking  # noqa: E402
+from json_api.services import ranking  # noqa: E402
 from sqlite_provider import SQLiteProjectDataProvider  # noqa: E402
 
 settings = Settings.from_env()
-app = Flask(__name__)
+app = Flask(__name__, template_folder="../frontend/templates", static_folder="../frontend/static")
 db.init_app(app)
 
 data_provider = None if settings.data_mode == "fake" else SQLiteProjectDataProvider(db.get_db)
 init_json_api(app, data_provider=data_provider, settings=settings)
 
-
 @app.route("/")
 def index():
-    return jsonify(message="Hello from Flask!")
-
+    return render_template("index.html")
 
 @app.route("/dashboard/<user_id>")
 def display_user_dashboard(user_id):
@@ -46,17 +44,14 @@ def display_user_dashboard(user_id):
             return jsonify(error="user not found"), 404
         projects = ctx.data.list_projects()
         cards, warnings = ranking.recommend(user, projects, None, 3)
-        facets = catalog.facets(projects)
     except AppError as exc:
         return jsonify(error=exc.message, code=exc.code), exc.status
 
-    # TODO(frontend): replace this JSON with render_template("dashboard.html", ...) once the
-    # page exists. These are the values the template would receive.
-    return jsonify(
+    return render_template(
+        "dashboard.html",
         user=user.model_dump(mode="json"),
         recommendations=[c.model_dump(mode="json") for c in cards],
         warnings=[w.model_dump() for w in warnings],
-        facets={k: facets[k] for k in ("majors", "interests", "difficulties")},
         data_source=ctx.data_source,
     )
 
