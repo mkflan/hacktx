@@ -1,43 +1,59 @@
-# Handoff: Pushed to origin, UI styling handed to other agents
+# Handoff: RabbitHole demo polish (rename, accessibility menu, forum identity, Gemini 3.5 Flash-Lite)
 
-When: 2026-10-25 01:35 · Paired: Rashmi + Viraj · Branch: master · Last commit: d87ed48 chore: ignore .playwright-mcp logs
+When: 2026-10-25 11:10 · Paired: Rashmi + Viraj · Branch: master · Last commit: 3c2299a docs: RabbitHole names, model defaults, SerpApi costs and the accessibility menu in the run sheet
 
 ## Goal
-Research Rabbit, the HackTX 26 SerpApi-track demo: profiles, Netflix-style project dashboard,
-project pages with SerpApi sources, a Gemini mentor (the Caterpillar), Wonderland forum.
-Plan in docs/SPEC.md, run sheet in docs/DEMO.md. Full feature list is in the archived handoff
-docs/handoff/archive/2026-10-25_0050_research-rabbit-demo-build.md.
+RabbitHole (was Research Rabbit), the HackTX 26 SerpApi-track demo: profiles, Netflix-style
+project shelves, project pages with SerpApi sources, a Gemini mentor (the Caterpillar), the
+Wonderland Forum. Plan in docs/SPEC.md, run sheet in docs/DEMO.md.
 
-## Done this session
-- Added .playwright-mcp/ to .gitignore (committed).
-- Checked tests (all pass, 186) and ruff (clean); no secrets tracked.
-- Pushed 9 commits to origin/master (5c42b10 -> d87ed48). Rashmi chose to push straight to master.
+## Done this session (Rashmi's punch-list, autonomous run, branch feat/demo-polish merged)
+- App renamed RabbitHole everywhere (titles, nav, README, SPEC, DEMO). Tabs: Home, Rabbit Hole
+  Projects, Caterpillar Mentor, Wonderland Forum. Landing: "Find Your Next Project" copy and
+  "Unearth Your Project Profile". Footer: "Made with ♥ by sudo make us win · HackTX 2026".
+- Nav: text size (slider 100-150%) and the test-user switcher sit behind one Accessibility
+  button (popover, Escape and outside click close it). The switcher lists every profile, so one
+  made on the landing page appears too (was the first 10 users only).
+- Forum: no "Comment as" or "Post as" dropdown. Comments and posts are made as the signed-in
+  student; a user_id sent in the form is ignored; no profile gives a 400 with a message.
+- Project page: "Dig deeper" moved from the right column to under the materials table.
+- Gemini: live checks showed gemini-2.5-flash is gone (404 for new users), gemini-3.6-flash
+  answered a chat in 10 s but returned 503 on a starter, gemini-3.5-flash-lite did chat in 4 s
+  and a starter in 9 s. Defaults are now 3.5-flash-lite first, 3.6-flash as fallback;
+  .env GEMINI_MODEL was updated to match (DEMO.md step 1 told it to pin 3.6).
+- SerpApi: the "half my quota in one search" was the enrichment script (default budget was 80
+  per run; 161 used this month, all enrichment; 89 plan searches + 1000 extra credits left).
+  Default budget is now 20 and the script prints the balance (free account.json call) first.
+  Per action: dig 2, starter 2, mentor turn with dig 2; repeats free. Search quality unchanged.
+- Tests: 196 pass (15 new or changed, written first). ruff clean. Pages checked in a browser.
 
 ## Current state
-- Everything in docs/SPEC.md works locally; origin/master matches local master.
-- origin is https://github.com/mkflan/hacktx.git (Kai's account, not virajs-garage). Pushing
-  worked, so virajs-garage has write access there.
-- UI styling polish is deliberately left to Cursor and other agents. Backend, templates and
-  rabbit.js are the files they will touch (frontend/templates/, frontend/static/).
-- SerpApi free plan: about 89 of 250 searches left as of the last check. Keys are in .env.
-- docs/TODO.md was not updated this session.
+- master == feat/demo-polish (fast-forward). Nothing pushed; origin/master is at 3f796de.
+- A dev server was started on http://127.0.0.1:8000 from master (and a stray one on :8010).
+  Stale app.py processes were killed to restart cleanly, including one from 10:18 that was
+  probably Rashmi's own server: restart yours with `cd backend` + `..\.venv\Scripts\python app.py`.
+- Pre-existing browser console 404 for /tailwindcss (the @import in base.html); harmless.
 
 ## Next steps (in order)
-1. Let the styling agents work on a branch; merge to master once pytest and ruff pass.
-2. Rehearse docs/DEMO.md twice on the demo laptop; time it; fix anything awkward.
-3. Record a backup video in case Wi-Fi or quotas fail.
-4. Devpost write-up and the 2-3 minute video script (hackathon playbook, section 4).
-5. Optional: BACKLOG.md items (login, profile editing, saved chat history, deployment).
+1. Review the four commits (cd0f855..3c2299a) and push to origin if happy (not pushed).
+2. Rehearse docs/DEMO.md twice on the demo laptop; time it. Watch Gemini latency on 3.5-flash-lite.
+3. Record a backup video; Devpost write-up and the 2-3 minute video script.
+4. Optional: tell Kai (mkflan) that master moved.
 
 ## Open questions / decisions waiting
-- Should "Dig deeper" results also be saved for the chat page (today only project pages)?
-- Tell Kai (mkflan) that master moved, if they still use that repo.
+- Keep "HackTX 2026" in the footer, or only the team credit?
+- Should "Post as" for discussions also show the major (it does now, read-only)?
 
 ## Files touched
-- .gitignore: ignore .playwright-mcp/
-- docs/handoff/: archived the previous note, wrote this one
+- frontend/templates/base.html: nav, accessibility popover, footer, text-size slider
+- frontend/templates/{index,forum,post,project,chat,dashboard}.html: copy, forms, layout
+- backend/pages.py, backend/forum.py: session user for posts and comments; all users in nav
+- backend/json_api/config.py, env.example.txt: model defaults
+- backend/serp.py, scripts/enrich_catalog.py: account balance, budget 20
+- backend/tests/test_{pages,forum,gemini_provider,search}.py: new and updated tests
+- README.md, docs/SPEC.md, docs/DEMO.md, docs/TODO.md: names, models, costs, run sheet
 
 ## How to run / test right now
-- `cd backend` then `..\.venv\Scripts\python app.py` -> http://127.0.0.1:8000 (private window;
-  `/health` must say llm_mode gemini, search_enabled true)
+- `cd backend` then `..\.venv\Scripts\python app.py` -> http://127.0.0.1:8000 (`/health` must say
+  llm_model gemini-3.5-flash-lite, search_enabled true)
 - `.venv\Scripts\python -m pytest` and `.venv\Scripts\ruff check backend scripts` (repo root)
