@@ -3,8 +3,8 @@
 What is finished and what still needs doing. Tick items as they land; add new ones at the
 bottom of the right section with an owner.
 
-Owners: **App** = application/backend logic (branch `backend-w/o-database`),
-**DB** = database teammate, **Front** = frontend, **Team** = anyone.
+Owners: **Back** = backend (Rashmi and Viraj: app.py, SQLite, json_api), **Front** =
+frontend pages, **Team** = anyone.
 
 ## Done (2026-10-24, App)
 
@@ -38,9 +38,12 @@ Owners: **App** = application/backend logic (branch `backend-w/o-database`),
 - [x] `app.py` loads `env.txt`, passes the SQLite provider to `init_json_api`, runs on :8000
 - [x] Tests on an in-memory database (seed matches fixtures, same ranking as fake mode, 503 on a
       broken connection) plus a smoke run of `app.py` against a real `app.db` (mock LLM)
-- [ ] **DB** Kai to review the schema, seed and provider (written on the app side to unblock the
-      demo; see INTEGRATION.md)
-- [ ] **DB** Write paths (create users, add projects) if the demo needs them; none exist yet
+- [x] Kai handed over the schema, seed and provider (2026-10-24); INTEGRATION.md rewritten
+- [x] `app.py` is a `create_app()` factory with `/`, `/forum` (the nav link was a 404) and
+      `/dashboard/<user_id>` rendering Kai's templates; page tests on an in-memory database
+      with `StrictUndefined`; real dev-server smoke test of every page and API route
+- [ ] **Back** Write paths: create/update a user (the index interest form submits nowhere yet),
+      add projects, save generated plans (`persisted: false` today)
 - [x] Forum (schema v3): `posts` and `comments` tables, demo seed rows, `backend/forum.py`,
       `/forum` page with "post as" demo user picker, tests on an in-memory database
 - [x] Removed the "Freetail Hackers" footer credit
@@ -68,5 +71,4 @@ Owners: **App** = application/backend logic (branch `backend-w/o-database`),
 
 ## Later (not in the MVL)
 
-- [ ] **DB** Save generated plans / history (responses say `persisted: false` today)
 - [ ] **Team** Verified resources (needs real link and content checks, not just URL syntax)

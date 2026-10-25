@@ -14,7 +14,8 @@ Project details open inside the current tab. A card can also be **personalized**
 project is loaded and a tailored plan is generated for the selected user, without changing the
 shared record.
 
-`backend/app.py` is the one app: page routes, the SQLite database and the `/api/...` routes.
+`backend/app.py` is the one app: the pages in `frontend/templates/`, the SQLite database and
+the `/api/...` routes.
 Data comes from SQLite (`data_source: "sqlite"`), seeded with two demo students and ten sample
 projects; `DATA_MODE=fake` switches to the in-memory fixtures instead. See
 [INTEGRATION.md](docs/INTEGRATION.md). Task status is tracked in [TODO.md](docs/TODO.md).
@@ -22,8 +23,10 @@ projects; `DATA_MODE=fake` switches to the in-memory fixtures instead. See
 ## Layout
 
 ```
-backend/app.py           the Flask app: page routes + init_json_api(app, SQLite provider)
-backend/db.py            SQLite connection, schema version check, demo seeding
+frontend/templates/      Jinja pages: base, index (/), forum (/forum), dashboard (/dashboard/<id>)
+frontend/static/         static files served at /static/
+backend/app.py           create_app(): page routes + init_json_api(app, SQLite provider)
+backend/db.py            SQLite connection, schema version check, demo seeding, connect_memory()
 backend/schema.sql       tables (users, projects, resources); seed.sql: demo rows
 backend/sqlite_provider.py  ProjectDataProvider over SQLite (rows -> json_api DTOs)
 backend/json_api/        application package (Flask + Pydantic v2), never opens SQLite
@@ -34,7 +37,7 @@ backend/json_api/        application package (Flask + Pydantic v2), never opens 
   services/                catalog, ranking, timefit, normalize, resources, generation, cache
   llm/                     base (interface), mock, gemini_provider, validation, prompts/
   dev/                     fixtures + InMemoryProjectDataProvider (not database seeds)
-backend/tests/           pytest; SQLite only in memory, no network, no paid calls
+backend/tests/           pytest: json_api, SQLite provider, pages; in-memory SQLite, no network
 ```
 
 ## Setup (Windows, Python 3.14)
@@ -55,6 +58,9 @@ The first run creates `backend/app.db` (gitignored) and seeds the demo data; the
 `GET /api/users` IDs `1` (alex_demo) and `2` (maya_demo). If an older `app.db` exists, the app
 refuses to start and asks you to delete it. `python -m json_api` still runs the JSON API alone
 on fixtures.
+
+Pages: `/` (home), `/forum`, `/dashboard/1` and `/dashboard/2` (the demo students' ranked
+projects). The JSON API is under `/api/...` on the same port.
 
 Tests and lint, from the repo root:
 

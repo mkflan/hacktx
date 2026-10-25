@@ -12,17 +12,9 @@ from json_api.llm.mock import MockLLMProvider
 from sqlite_provider import SQLiteProjectDataProvider, split_list
 
 
-def memory_db(seed=True) -> sqlite3.Connection:
-    conn = sqlite3.connect(":memory:")
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON")
-    db.apply_schema(conn, seed=seed)
-    return conn
-
-
 @pytest.fixture
 def conn():
-    connection = memory_db()
+    connection = db.connect_memory()
     yield connection
     connection.close()
 
@@ -106,7 +98,7 @@ def test_api_routes_serve_sqlite_data(make_client, provider):
 
 
 def test_a_broken_database_is_503_not_an_empty_catalog(make_client):
-    conn = memory_db()
+    conn = db.connect_memory()
     conn.close()
     client = make_client(
         data_provider=SQLiteProjectDataProvider(lambda: conn),

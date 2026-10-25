@@ -43,6 +43,15 @@ def apply_schema(db, seed=True):
     db.commit()
 
 
+def connect_memory(seed=True):
+    """A private in-memory database with the schema (and demo rows). For tests and demos."""
+    db = sqlite3.connect(":memory:")
+    db.row_factory = sqlite3.Row
+    db.execute("PRAGMA foreign_keys = ON")
+    apply_schema(db, seed=seed)
+    return db
+
+
 def init_db():
     apply_schema(get_db(), seed=current_app.config["SEED_DEMO_DATA"])
 

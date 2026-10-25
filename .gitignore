@@ -8,6 +8,7 @@ env.txt
 
 # Scratch and private data
 temp/
+/scratchpad.md
 input/private/
 
 # Python
@@ -42,6 +43,6 @@ Thumbs.db
 # Claude Code local-only settings
 .claude/settings.local.json
 
-# Local SQLite files (owned by the database teammate)
+# Local SQLite files (backend/app.db is rebuilt from schema.sql + seed.sql)
 *.db
 *.sqlite3

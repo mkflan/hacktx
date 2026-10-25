@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 from flask import Flask, render_template
-from test_sqlite_provider import memory_db
 
+import db
 import forum
 
 TEMPLATES = Path(__file__).resolve().parents[2] / "frontend" / "templates"
@@ -13,7 +13,7 @@ TEMPLATES = Path(__file__).resolve().parents[2] / "frontend" / "templates"
 
 @pytest.fixture
 def conn():
-    connection = memory_db()
+    connection = db.connect_memory()
     yield connection
     connection.close()
 
@@ -68,8 +68,6 @@ def test_comment_on_missing_post_is_404_and_empty_comment_is_400(conn):
 
 
 def test_seed_is_idempotent_for_the_forum(conn):
-    import db
-
     db.apply_schema(conn)
     assert len(forum.list_posts(conn)) == 3
 
